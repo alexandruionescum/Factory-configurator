@@ -40,8 +40,15 @@ așa se pot adăuga mai târziu DXF / IFC / alte programe.
 - libredwg este GPL-3: ok ca serviciu web; o aplicație desktop distribuită ar avea obligații GPL.
 - Layout-urile clienților sunt date sensibile.
 
+## Decizii luate (2026-10-21)
+
+- Utilizatori: toată lumea, cu sau fără visTABLE → exportul visTABLE e unul din mai multe formate.
+- Aplicație web.
+- Interfața în engleză.
+- Prima versiune a interfeței: pași Hall → Zones → Layout → Flows → 3D → Export (`app/`).
+
 ## Decizii deschise
 
-- Cine sunt utilizatorii: planificatori cu licență visTABLE, sau și oameni fără visTABLE?
-- Aplicație web sau desktop?
-- Fișiere reale de test (Excel brief + .vtlx, anonimizate).
+- Fișiere reale de test (Excel brief + .vtlx, anonimizate) – încă nu există.
+- Unde se publică aplicația (găzduire) și dacă are conturi de utilizator.
+- Alte limbi pe lângă engleză (germană, română).
