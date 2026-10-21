@@ -1,0 +1,13 @@
+# local builds (libredwg) and tool output
+.local/
+__pycache__/
+*.pyc
+out/
+work/
+
+# client data stays on the PC, never in the repo
+# (anonymised test files go to tests/fixtures/ and are added explicitly with git add -f)
+data/
+*.vtlx
+*.dwg
+*.xlsx
