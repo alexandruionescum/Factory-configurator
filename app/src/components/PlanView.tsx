@@ -78,11 +78,11 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
     >
       <defs>
         <pattern id="g1" width="1" height="1" patternUnits="userSpaceOnUse">
-          <path d="M1 0H0V1" fill="none" stroke="#E3E6EA" strokeWidth="0.03" />
+          <path d="M1 0H0V1" fill="none" stroke="#E6E8ED" strokeWidth="0.03" />
         </pattern>
         <pattern id="g5" width="5" height="5" patternUnits="userSpaceOnUse" y={L % 5}>
           <rect width="5" height="5" fill="url(#g1)" />
-          <path d="M5 0H0V5" fill="none" stroke="#C9CED5" strokeWidth="0.06" />
+          <path d="M5 0H0V5" fill="none" stroke="#D4D7DD" strokeWidth="0.06" />
         </pattern>
         {project.products.map(pr => (
           <marker key={pr.id} id={`arr-${pr.id}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="2.6" markerHeight="2.6" orient="auto-start-reverse">
@@ -90,22 +90,22 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
           </marker>
         ))}
         <marker id="arr-mix" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="2.6" markerHeight="2.6" orient="auto-start-reverse">
-          <path d="M0 0L10 5L0 10z" fill="#444" />
+          <path d="M0 0L10 5L0 10z" fill="#3B3D43" />
         </marker>
       </defs>
 
       <rect x={-M} y={-M} width={W + 2 * M} height={L + 2 * M} fill="#FFFFFF" />
-      <rect x={0} y={0} width={W} height={L} fill="url(#g5)" stroke="#2B2F36" strokeWidth={ext / 300} />
-      <text x={W / 2} y={-1.2} fontSize={ext / 50} textAnchor="middle" fill="#5A6170">{W} m</text>
-      <text x={-1.2} y={L / 2} fontSize={ext / 50} textAnchor="middle" fill="#5A6170" transform={`rotate(-90 ${-1.2} ${L / 2})`}>{L} m</text>
-      <text x={W + 1.5} y={0} fontSize={ext / 45} textAnchor="middle" fill="#5A6170">N ↑</text>
+      <rect x={0} y={0} width={W} height={L} fill="url(#g5)" stroke="#3B3D43" strokeWidth={ext / 300} />
+      <text x={W / 2} y={-1.2} fontSize={ext / 50} textAnchor="middle" fill="#6A6E79">{W} m</text>
+      <text x={-1.2} y={L / 2} fontSize={ext / 50} textAnchor="middle" fill="#6A6E79" transform={`rotate(-90 ${-1.2} ${L / 2})`}>{L} m</text>
+      <text x={W + 1.5} y={0} fontSize={ext / 45} textAnchor="middle" fill="#6A6E79">N ↑</text>
 
       {placed.map(z => {
         const sel = z.id === selectedId;
         const hi = highlight.includes(z.id);
         return (
-          <rect key={z.id} x={z.x} y={sy(z.y + z.l)} width={z.w} height={z.l} fill={z.color} fillOpacity={0.78}
-            stroke={hi ? '#D62828' : sel ? '#111' : '#3A3F47'} strokeWidth={sel || hi ? ext / 250 : ext / 600}
+          <rect key={z.id} x={z.x} y={sy(z.y + z.l)} width={z.w} height={z.l} fill={z.color} fillOpacity={0.85}
+            stroke={hi ? '#DB2100' : sel ? '#EE6B00' : '#3B3D43'} strokeWidth={sel || hi ? ext / 250 : ext / 600}
             style={{ cursor: editable ? 'move' : 'pointer' }} onPointerDown={e => down(e, z, 'move')} />
         );
       })}
@@ -119,7 +119,7 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
         const ux = (b.x - a.x) / len, uy = (b.y - a.y) / len;
         return (
           <line key={`${f.from.id}>${f.to.id}`} x1={a.x + ux * cut} y1={sy(a.y + uy * cut)} x2={b.x - ux * cut} y2={sy(b.y - uy * cut)}
-            stroke={one ? one.color : '#444'} strokeOpacity={0.75} strokeWidth={sw} strokeLinecap="round"
+            stroke={one ? one.color : '#3B3D43'} strokeOpacity={0.75} strokeWidth={sw} strokeLinecap="round"
             markerEnd={`url(#arr-${one ? one.id : 'mix'})`} pointerEvents="none" />
         );
       })}
@@ -129,7 +129,7 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
         const cx = z.x + z.w / 2, cy = sy(z.y + z.l / 2);
         const halo = { paintOrder: 'stroke', stroke: '#FFFFFF', strokeWidth: fs * 0.25, strokeOpacity: 0.85 } as const;
         return (
-          <g key={z.id} pointerEvents="none" fill="#14171C" textAnchor="middle">
+          <g key={z.id} pointerEvents="none" fill="#000000" textAnchor="middle">
             <text x={cx} y={cy - fs * 0.15} fontSize={fs} fontWeight={600} style={halo}>{z.code || z.name}</text>
             <text x={cx} y={cy + fs * 1.05} fontSize={fs * 0.8} style={halo}>{zoneArea(z).toFixed(0)} m²</text>
           </g>
@@ -144,7 +144,7 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
           ['ne', z.x + z.w, sy(z.y + z.l)],
         ];
         return hs.map(([h, x, y]) => (
-          <circle key={h} cx={x} cy={y} r={r} fill="#FFFFFF" stroke="#111" strokeWidth={r / 3}
+          <circle key={h} cx={x} cy={y} r={r} fill="#FFFFFF" stroke="#EE6B00" strokeWidth={r / 2.5}
             style={{ cursor: h === 'e' ? 'ew-resize' : h === 'n' ? 'ns-resize' : 'nesw-resize' }}
             onPointerDown={e => down(e, z, h)} />
         ));

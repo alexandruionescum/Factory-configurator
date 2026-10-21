@@ -88,7 +88,7 @@ export async function planPng(svgId: string, p: Project): Promise<Blob> {
   clone.setAttribute('height', String(Math.round(vb.height * scale)));
   const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   title.setAttribute('x', String(vb.x + 0.5)); title.setAttribute('y', String(vb.y + 2));
-  title.setAttribute('font-size', String(Math.max(p.hall.width, p.hall.length) / 45)); title.setAttribute('fill', '#14171C');
+  title.setAttribute('font-size', String(Math.max(p.hall.width, p.hall.length) / 45)); title.setAttribute('fill', '#000000');
   title.textContent = `${p.name} · v${String(p.rev).padStart(2, '0')}`;
   clone.appendChild(title);
   const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml' }));

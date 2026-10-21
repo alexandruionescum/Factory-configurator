@@ -5,13 +5,13 @@
 export type AreaType = 'Fertigung' | 'Montage' | 'Lager' | 'Transport' | 'Nebenfläche' | 'Verwaltung' | 'Unbestimmt';
 
 export const AREA_TYPES: { key: AreaType; label: string; color: string; aliases: string[] }[] = [
-  { key: 'Fertigung', label: 'Production', color: '#5B8FD6', aliases: ['production', 'productie', 'producție', 'fertigung', 'manufacturing'] },
-  { key: 'Montage', label: 'Assembly', color: '#7DBA5B', aliases: ['assembly', 'asamblare', 'montaj', 'montage'] },
-  { key: 'Lager', label: 'Storage', color: '#F0A04B', aliases: ['storage', 'depozitare', 'lager', 'warehouse'] },
-  { key: 'Transport', label: 'Transportation / aisle', color: '#B8BEC6', aliases: ['transportation', 'transport', 'culoar', 'aisle'] },
-  { key: 'Nebenfläche', label: 'Auxiliary', color: '#9C7CC9', aliases: ['auxiliary', 'auxiliar', 'nebenflache', 'nebenfläche'] },
-  { key: 'Verwaltung', label: 'Administration', color: '#4DB6C9', aliases: ['administration', 'administrativ', 'verwaltung', 'office'] },
-  { key: 'Unbestimmt', label: 'Unspecified', color: '#D3D6DA', aliases: ['unspecified', 'nespecificat', 'unbestimmt'] },
+  { key: 'Fertigung', label: 'Production', color: '#F4A15D', aliases: ['production', 'productie', 'producție', 'fertigung', 'manufacturing'] },
+  { key: 'Montage', label: 'Assembly', color: '#F9C9A3', aliases: ['assembly', 'asamblare', 'montaj', 'montage'] },
+  { key: 'Lager', label: 'Storage', color: '#A9ACB4', aliases: ['storage', 'depozitare', 'lager', 'warehouse'] },
+  { key: 'Transport', label: 'Transportation / aisle', color: '#D4D7DD', aliases: ['transportation', 'transport', 'culoar', 'aisle'] },
+  { key: 'Nebenfläche', label: 'Auxiliary', color: '#C2B8AC', aliases: ['auxiliary', 'auxiliar', 'nebenflache', 'nebenfläche'] },
+  { key: 'Verwaltung', label: 'Administration', color: '#8A8E98', aliases: ['administration', 'administrativ', 'verwaltung', 'office'] },
+  { key: 'Unbestimmt', label: 'Unspecified', color: '#EFF1F6', aliases: ['unspecified', 'nespecificat', 'unbestimmt'] },
 ];
 
 export const areaType = (k: AreaType) => AREA_TYPES.find(t => t.key === k)!;
@@ -64,7 +64,8 @@ export const zoneLabel = (z: Zone) => (z.code ? `${z.code} ${z.name}` : z.name);
 export const zoneArea = (z: Zone) => z.w * z.l;
 export const zoneCenter = (z: Zone) => ({ x: z.x + z.w / 2, y: z.y + z.l / 2 });
 
-const PRODUCT_COLORS = ['#D9534F', '#2E7DD7', '#2BA84A', '#9B59B6', '#E67E22', '#16A085'];
+// EFESO palette: charcoal, orange, deep bronze, bronze, slate, taupe
+const PRODUCT_COLORS = ['#3B3D43', '#EE6B00', '#8F490E', '#BF6113', '#6A6E79', '#7C7062'];
 export const productColor = (i: number) => PRODUCT_COLORS[i % PRODUCT_COLORS.length];
 
 export function newZone(partial: Partial<Zone> = {}): Zone {

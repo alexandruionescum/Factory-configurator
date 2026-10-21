@@ -3,12 +3,16 @@ import { useProject } from './lib/store';
 import { parseProject } from './lib/model';
 import { layoutIssues } from './lib/layout';
 import { useAsk } from './components/Confirm';
+import logoSvg from './assets/efeso-logo.svg?raw';
 import HallStep from './steps/HallStep';
 import ZonesStep from './steps/ZonesStep';
 import LayoutStep from './steps/LayoutStep';
 import FlowsStep from './steps/FlowsStep';
 import View3DStep from './steps/View3DStep';
 import ExportStep from './steps/ExportStep';
+
+// black wordmark follows the theme text colour; the orange bars stay orange
+const LOGO = logoSvg.replace(/fill="#000"/g, 'fill="currentColor"');
 
 const STEPS = [
   { key: 'hall', title: 'Hall', sub: 'size, aisles' },
@@ -49,14 +53,17 @@ export default function App() {
   const badge = (k: StepKey) => {
     if (k === 'zones') return p.zones.length || null;
     if (k === 'flows') return p.products.length || null;
-    if (k === 'layout') { const n = layoutIssues(p).filter(i => i.level === 'error').length; return n ? `⚠ ${n}` : null; }
+    if (k === 'layout') { const n = layoutIssues(p).filter(i => i.level === 'error').length; return n || null; }
     return null;
   };
 
   return (
     <div className="app">
       <header className="top">
-        <div className="brand"><span className="logo">▦</span> Factory Layout Configurator</div>
+        <div className="brand">
+          <span className="logo" role="img" aria-label="EFESO" dangerouslySetInnerHTML={{ __html: LOGO }} />
+          <span className="product">Factory Layout <em className="accent">Configurator</em></span>
+        </div>
         <div className="pname">{p.name}</div>
         <div className="actions">
           <button onClick={store.undo} disabled={!store.canUndo} title="Undo (Ctrl+Z)">↶</button>
@@ -73,7 +80,7 @@ export default function App() {
           <button key={s.key} className={s.key === step ? 'active' : ''} onClick={() => setStep(s.key)}>
             <span className="n">{i + 1}</span>
             <span className="t"><b>{s.title}</b><small>{s.sub}</small></span>
-            {badge(s.key) && <span className="badge">{badge(s.key)}</span>}
+            {badge(s.key) && <span className={`badge${s.key === 'layout' ? ' bad' : ''}`}>{badge(s.key)}</span>}
           </button>
         ))}
       </nav>

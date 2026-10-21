@@ -45,6 +45,7 @@ așa se pot adăuga mai târziu DXF / IFC / alte programe.
 - Utilizatori: toată lumea, cu sau fără visTABLE → exportul visTABLE e unul din mai multe formate.
 - Aplicație web.
 - Interfața în engleză.
+- Design în stilul EFESO (culori, fonturi și logo de pe efeso.com).
 - Prima versiune a interfeței: pași Hall → Zones → Layout → Flows → 3D → Export (`app/`).
 
 ## Decizii deschise

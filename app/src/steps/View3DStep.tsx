@@ -9,17 +9,17 @@ import { pairFlows } from '../lib/flows';
 function buildScene(p: Project, volumes: boolean, flows: boolean) {
   const scene = new THREE.Scene();
   const { width: W, length: L, height: H } = p.hall;
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f99, 1.6));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8e98, 1.6));
   const sun = new THREE.DirectionalLight(0xffffff, 1.4);
   sun.position.set(W * 0.3, H * 4, L * 0.8);
   scene.add(sun);
 
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(W, 0.1, L), new THREE.MeshLambertMaterial({ color: 0xdfe3e8 }));
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(W, 0.1, L), new THREE.MeshLambertMaterial({ color: 0xd4d7dd }));
   floor.position.set(W / 2, -0.05, -L / 2);
   scene.add(floor);
   const shell = new THREE.LineSegments(
     new THREE.EdgesGeometry(new THREE.BoxGeometry(W, H, L)),
-    new THREE.LineBasicMaterial({ color: 0x59606b }),
+    new THREE.LineBasicMaterial({ color: 0x6a6e79 }),
   );
   shell.position.set(W / 2, H / 2, -L / 2);
   scene.add(shell);
@@ -29,7 +29,7 @@ function buildScene(p: Project, volumes: boolean, flows: boolean) {
   for (let y = 0; y <= L + 1e-6; y += 5) pts.push(0, 0.01, -y, W, 0.01, -y);
   const gridGeo = new THREE.BufferGeometry();
   gridGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  scene.add(new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color: 0xbfc5cd })));
+  scene.add(new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color: 0xa9acb4 })));
 
   for (const z of p.zones.filter(q => q.placed)) {
     const h = volumes ? Math.min(3, H) : 0.08;
@@ -38,7 +38,7 @@ function buildScene(p: Project, volumes: boolean, flows: boolean) {
     const c = zoneCenter(z);
     box.position.set(c.x, h / 2, -c.y);
     scene.add(box);
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry), new THREE.LineBasicMaterial({ color: 0x30343b }));
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry), new THREE.LineBasicMaterial({ color: 0x3b3d43 }));
     edges.position.copy(box.position);
     scene.add(edges);
     const el = document.createElement('div');
@@ -61,7 +61,7 @@ function buildScene(p: Project, volumes: boolean, flows: boolean) {
         new THREE.Vector3((a.x + b.x) / 2, lift + Math.max(1.5, len * 0.25), -(a.y + b.y) / 2),
         new THREE.Vector3(b.x, lift, -b.y),
       );
-      const color = f.products.length === 1 ? f.products[0].color : '#444444';
+      const color = f.products.length === 1 ? f.products[0].color : '#3B3D43';
       const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 32, 0.08 + 0.35 * (f.trips / max), 8), new THREE.MeshLambertMaterial({ color }));
       scene.add(tube);
       const tip = new THREE.Mesh(new THREE.ConeGeometry(0.25 + 0.5 * (f.trips / max), 1, 12), new THREE.MeshLambertMaterial({ color }));
@@ -83,7 +83,7 @@ export default function View3DStep({ project }: { project: Project }) {
     const el = host.current!;
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor(0xf4f6f8);
+    renderer.setClearColor(0xeff1f6);
     el.appendChild(renderer.domElement);
     const labels = new CSS2DRenderer();
     labels.domElement.className = 'labels3d';

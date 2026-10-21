@@ -29,7 +29,7 @@ export default function ExportStep({ store }: { store: Store }) {
       )}
 
       <div className="export-grid">
-        <div className="card">
+        <div className="card main-export">
           <h3>Block Layout Table for visTABLE (.xlsx)</h3>
           <p className="muted">The 22 columns of the visTABLE Block Layout Table, with block centres in mm and the colour as cell fill.
             Import it with the Block Layout Table import in visTABLE. Existing blocks with the same unique name are updated.</p>
