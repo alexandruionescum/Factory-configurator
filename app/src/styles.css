@@ -273,3 +273,10 @@ svg.plan { flex: 1; min-height: 0; width: 100%; background: var(--plan-bg); bord
 .file-btn:hover span { background: var(--accent-soft); border-color: var(--accent); }
 .file-btn:focus-within span { outline: 2px solid var(--accent); outline-offset: 1px; }
 @media (max-width: 900px) { .vt-steps > li { padding-left: 20px; padding-top: 52px; } .vt-steps > li::before { top: 16px; } }
+
+/* Excel import */
+.import { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.form.map { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.tag.warn { border-color: var(--warn); color: var(--warn); }
+.skipped summary { cursor: pointer; color: var(--muted); }
+.skipped ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }

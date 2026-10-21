@@ -3,6 +3,7 @@ import { Store } from '../lib/store';
 import { AREA_TYPES, AreaType, Zone, areaType, matchAreaType, newZone, snap } from '../lib/model';
 import { fmt } from '../lib/flows';
 import { NumInput } from '../components/fields';
+import ExcelImport from '../components/ExcelImport';
 
 // Rows pasted from Excel: Code, Name, Type, Area (tab separated). Type and code are optional.
 function parsePaste(text: string): { zones: Zone[]; skipped: number } {
@@ -61,6 +62,8 @@ export default function ZonesStep({ store }: { store: Store }) {
       <h2>Zones (from the brief)</h2>
       <p className="lead">The list of required areas. Areas come from the brief; the app never invents values. The short code (e.g. "MA") is shown on the plan.</p>
 
+      <ExcelImport store={store} />
+
       <div className="card table-wrap">
         <table className="grid">
           <thead>
@@ -96,7 +99,7 @@ export default function ZonesStep({ store }: { store: Store }) {
       </div>
 
       <div className="card">
-        <h3>Paste from Excel</h3>
+        <h3>Paste rows</h3>
         <p className="muted">Copy the columns <b>Code, Name, Type, Area</b> from Excel (type and code are optional) and paste them here.
           Types are recognised in English, German or Romanian (e.g. Production / Fertigung / Producție).</p>
         <textarea rows={5} value={paste} onChange={e => setPaste(e.target.value)} placeholder={'MA\tMachining\tProduction\t520\nRM\tRaw material store\tStorage\t420'} />
