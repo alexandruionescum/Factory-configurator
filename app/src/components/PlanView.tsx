@@ -66,6 +66,7 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
   const maxTrips = Math.max(1, ...flows.map(f => f.trips));
   const placed = project.zones.filter(z => z.placed);
   const ext = Math.max(W, L);
+  const parts = project.hall.footprint?.length ? project.hall.footprint : [{ x: 0, y: 0, w: W, l: L }];
 
   return (
     <svg
@@ -95,7 +96,11 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
       </defs>
 
       <rect x={-M} y={-M} width={W + 2 * M} height={L + 2 * M} fill="#FFFFFF" />
-      <rect x={0} y={0} width={W} height={L} fill="url(#g5)" stroke="#3B3D43" strokeWidth={ext / 300} />
+      {/* building outline: a thick dark stroke under every part, then the parts filled on top, so only the
+          outer edge of the union stays visible (L / U / S shapes are several rectangles) */}
+      {parts.map((r, i) => <rect key={`o${i}`} x={r.x} y={sy(r.y + r.l)} width={r.w} height={r.l} fill="none" stroke="#3B3D43" strokeWidth={ext / 150} />)}
+      {parts.map((r, i) => <rect key={`f${i}`} x={r.x} y={sy(r.y + r.l)} width={r.w} height={r.l} fill="url(#g5)" />)}
+      {parts.length > 1 && <rect x={0} y={0} width={W} height={L} fill="none" stroke="#A9ACB4" strokeWidth={ext / 600} strokeDasharray={`${ext / 120} ${ext / 120}`} />}
       <text x={W / 2} y={-1.2} fontSize={ext / 50} textAnchor="middle" fill="#6A6E79">{W} m</text>
       <text x={-1.2} y={L / 2} fontSize={ext / 50} textAnchor="middle" fill="#6A6E79" transform={`rotate(-90 ${-1.2} ${L / 2})`}>{L} m</text>
       <text x={W + 1.5} y={0} fontSize={ext / 45} textAnchor="middle" fill="#6A6E79">N ↑</text>

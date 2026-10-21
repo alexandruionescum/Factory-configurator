@@ -1,7 +1,7 @@
 // Brief template -> project: zones of the chosen phase, flows, hall, then the automatic layout.
 // Values come only from the brief; every default the configurator has to use is listed as an assumption.
 import { Project, Zone, emptyProject, newZone, productColor, uid } from './model';
-import { autoArrange, proposeHall } from './layout';
+import { arranged, proposeHall } from './layout';
 import { Brief, Phase, areaInPhase, positionsInPhase } from './template';
 import { parseNumber, text } from './briefImport';
 
@@ -59,9 +59,9 @@ export function briefToProject(b: Brief, phase: Phase): BriefResult {
   const height = num('height');
   p.hall.height = height && height > 0 ? height : 8;
   if (!(height && height > 0)) assumptions.push('Clear height not given: 8 m used.');
+  // zones touch by default; aisles are set in the Layout step (older templates may still give one)
   const aisle = num('aisle');
-  p.aisle = aisle !== null && aisle >= 0 ? aisle : 3.5;
-  if (aisle === null) assumptions.push('Aisle width between zone rows not given: 3.5 m used.');
+  p.aisle = aisle !== null && aisle >= 0 ? aisle : 0;
 
   const w = num('width'), l = num('length');
   if (w && l && w > 0 && l > 0) p.hall = { ...p.hall, width: w, length: l };
@@ -71,12 +71,12 @@ export function briefToProject(b: Brief, phase: Phase): BriefResult {
     if (!(g && g >= 1)) assumptions.push('Gross-up factor not given: 1.15 used.');
     const total = zones.reduce((s, z) => s + z.target, 0);
     p.hall = { ...p.hall, ...proposeHall(p, grossUp) };
-    assumptions.push(`Hall size not given: ${p.hall.width} × ${p.hall.length} m proposed (net ${fmt(total)} m² × ${grossUp}, enlarged until the automatic layout fits, 3:2 shape).`);
+    assumptions.push(`Factory size proposed (not in the brief): ${p.hall.width} × ${p.hall.length} m proposed (net ${fmt(total)} m² × ${grossUp}, enlarged until the automatic layout fits, 3:2 shape).`);
   }
 
-  const r = autoArrange(p);
-  p.zones = r.zones;
-  if (!r.fits) warnings.push(`The areas do not fit in the hall of ${p.hall.width} × ${p.hall.length} m with ${p.aisle} m aisles; zones run outside the hall.`);
+  const { project: q, result: r } = arranged(p);
+  p.zones = q.zones; p.hall = q.hall;
+  if (!r.fits) warnings.push(`The areas do not fit in a factory of ${p.hall.width} × ${p.hall.length} m; zones run outside. Enlarge the size or leave it empty.`);
   p.meta = {
     client: text(pv('client')) || undefined, site: text(pv('site')) || undefined,
     preparedBy: text(pv('preparedBy')) || undefined, date: text(pv('date')) || undefined, phase, assumptions,

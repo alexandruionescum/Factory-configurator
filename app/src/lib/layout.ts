@@ -1,109 +1,256 @@
-import { Project, Zone, snap, zoneArea, zoneLabel } from './model';
+import { GroupBy, LayoutSettings, Project, Rect, ShapeType, Zone, defaultLayout, snap, zoneArea, zoneLabel } from './model';
 
-// Zone order for the automatic arrangement: follow the routes of the products (highest volume first),
-// then the zones that no route uses, in list order. Zones of one stream (department) stay together,
-// streams in the order they first appear.
-export function flowOrder(p: Project): string[] {
+// ---------- order and groups ----------
+
+const groupKey = (z: Zone, by: GroupBy) => (by === 'stream' ? z.stream ?? '' : by === 'type' ? z.type : '');
+
+// Zone order for the automatic arrangement: the routes of the products (highest volume first), then the
+// zones no route uses, in list order. Zones of one group (stream or area type) stay together, groups in
+// the order they first appear.
+export function flowOrder(p: Project, by: GroupBy = layoutSettings(p).groupBy): string[] {
   const order: string[] = [];
   const products = [...p.products].sort((a, b) => b.volume - a.volume);
   for (const pr of products) for (const id of pr.route) if (!order.includes(id)) order.push(id);
   for (const z of p.zones) if (!order.includes(z.id)) order.push(z.id);
   const live = order.filter(id => p.zones.some(z => z.id === id && z.target > 0));
-  const stream = (id: string) => p.zones.find(z => z.id === id)?.stream ?? '';
-  if (!live.some(id => stream(id))) return live;
-  const streams = [...new Set(live.map(stream))];
-  return streams.flatMap(s => live.filter(id => stream(id) === s));
+  const key = (id: string) => groupKey(p.zones.find(z => z.id === id)!, by);
+  const groups = [...new Set(live.map(key))];
+  return groups.flatMap(g => live.filter(id => key(id) === g));
 }
 
-export interface ArrangeResult { zones: Zone[]; fits: boolean; rows: number }
+export const layoutSettings = (p: Project): LayoutSettings => ({ ...defaultLayout(), ...(p.layout ?? {}) });
 
-// A unit is one column of a row: one large zone over the full row depth, or several small zones
-// of the same stream stacked on top of each other (so small rooms do not become thin strips).
-interface Unit { w: number; items: { z: Zone; dy: number }[] }
+// ---------- building shapes ----------
+// A shape is a path of segments (rectangles) in a local frame W' x L' (rotation 0). Zones are laid along
+// the path: segment after segment, in lanes parallel to the segment, lanes filled back and forth.
 
-function makeUnits(order: Zone[], d: number): Unit[] {
+interface Seg extends Rect { axis: 'x' | 'y'; sign: 1 | -1 }
+
+function segments(shape: ShapeType, W: number, L: number, t: number): Seg[] {
+  switch (shape) {
+    case 'I': return [{ x: 0, y: 0, w: W, l: L, axis: 'x', sign: 1 }];
+    case 'L': return [
+      { x: 0, y: t, w: t, l: L - t, axis: 'y', sign: -1 },
+      { x: 0, y: 0, w: W, l: t, axis: 'x', sign: 1 },
+    ];
+    case 'U': return [
+      { x: 0, y: t, w: t, l: L - t, axis: 'y', sign: -1 },
+      { x: 0, y: 0, w: W, l: t, axis: 'x', sign: 1 },
+      { x: W - t, y: t, w: t, l: L - t, axis: 'y', sign: 1 },
+    ];
+    case 'S': {
+      const h = (L - 3 * t) / 2;
+      return [
+        { x: 0, y: 0, w: W, l: t, axis: 'x', sign: 1 },
+        { x: W - t, y: t, w: t, l: h, axis: 'y', sign: 1 },
+        { x: 0, y: t + h, w: W, l: t, axis: 'x', sign: -1 },
+        { x: 0, y: 2 * t + h, w: t, l: h, axis: 'y', sign: 1 },
+        { x: 0, y: 2 * t + 2 * h, w: W, l: t, axis: 'x', sign: 1 },
+      ];
+    }
+  }
+}
+
+const maxWing = (shape: ShapeType, W: number, L: number) =>
+  shape === 'L' ? Math.min(W, L) - 1 : shape === 'U' ? Math.min(W / 2, L) - 1 : shape === 'S' ? Math.min(L / 3, W / 2) - 0.5 : Math.min(W, L);
+const segArea = (ss: Seg[]) => ss.reduce((s, g) => s + g.w * g.l, 0);
+
+// Wing width so the footprint holds the zones with ~8 % slack; the user can fix it instead.
+export function wingFor(shape: ShapeType, W: number, L: number, need: number): number {
+  const hi0 = maxWing(shape, W, L);
+  if (shape === 'I') return hi0;
+  let lo = 2, hi = hi0;
+  if (segArea(segments(shape, W, L, hi)) < need) return snap(hi, 0.5);
+  for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; if (segArea(segments(shape, W, L, m)) >= need) hi = m; else lo = m; }
+  return snap(Math.min(hi + 0.25, hi0), 0.5);
+}
+
+// rotation of a local rectangle into the world box (W x L), counter-clockwise
+function rotRect(r: Rect, rot: number, W: number, L: number): Rect {
+  switch (rot) {
+    case 90: return { x: W - (r.y + r.l), y: r.x, w: r.l, l: r.w };
+    case 180: return { x: W - (r.x + r.w), y: L - (r.y + r.l), w: r.w, l: r.l };
+    case 270: return { x: r.y, y: L - (r.x + r.w), w: r.l, l: r.w };
+    default: return r;
+  }
+}
+
+// ---------- filling ----------
+
+export interface ArrangeResult { zones: Zone[]; fits: boolean; rows: number; footprint: Rect[]; wing: number }
+
+// A unit is one slot along a lane: one zone over the full lane depth, or several small zones of the same
+// group stacked across the lane (so small rooms do not become thin strips).
+interface Unit { len: number; group: string; items: { z: Zone; off: number; depth: number }[] }
+
+function makeUnits(order: Zone[], d: number, key: (z: Zone) => string): Unit[] {
   const small = (z: Zone) => z.target < 0.35 * d * d;
   const out: Unit[] = [];
   for (let i = 0; i < order.length;) {
     const z = order[i];
     if (!small(z)) {
-      const w = Math.max(snap(z.target / d), 1);
-      out.push({ w, items: [{ z: { ...z, w, l: d }, dy: 0 }] });
+      const len = Math.max(snap(z.target / d), 1);
+      out.push({ len, group: key(z), items: [{ z, off: 0, depth: d }] });
       i++; continue;
     }
     const col = [z]; let sum = z.target; i++;
-    while (i < order.length && small(order[i]) && (order[i].stream ?? '') === (z.stream ?? '') && sum + order[i].target <= 0.9 * d * d) {
+    while (i < order.length && small(order[i]) && key(order[i]) === key(z) && sum + order[i].target <= 0.9 * d * d) {
       sum += order[i].target; col.push(order[i]); i++;
     }
-    const w = Math.max(snap(Math.max(sum / d, Math.sqrt(Math.max(...col.map(q => q.target))))), 1);
-    let dy = 0;
-    out.push({ w, items: col.map(q => { const l = Math.max(snap(q.target / w), 1); const it = { z: { ...q, w, l }, dy }; dy = snap(dy + l); return it; }) });
+    const len = Math.max(snap(Math.max(sum / d, Math.sqrt(Math.max(...col.map(q => q.target))))), 1);
+    let off = 0;
+    out.push({ len, group: key(z), items: col.map(q => { const depth = Math.max(snap(q.target / len), 1); const it = { z: q, off, depth }; off = snap(off + depth); return it; }) });
   }
   return out;
 }
 
-function packRows(units: Unit[], W: number): Unit[][] {
-  const rows: Unit[][] = [[]];
-  let used = 0;
-  for (const u of units) {
-    if (used + u.w > W + 1e-6 && rows[rows.length - 1].length) { rows.push([]); used = 0; }
-    rows[rows.length - 1].push(u); used += u.w;
-  }
-  return rows;
-}
+interface Fill { zones: Zone[]; fits: boolean; lanes: number; score: number }
 
-// Row layout: n rows of equal depth separated by aisles, filled in snake order (left to right, then
-// right to left) so consecutive process steps stay neighbours. Tries 1..12 rows and keeps the one
-// with the most square-like zones.
-export function autoArrange(p: Project): ArrangeResult {
-  const { width: W, length: L } = p.hall;
-  const a = p.aisle;
-  const order = flowOrder(p).map(id => p.zones.find(z => z.id === id)!);
-  let best: { rows: Unit[][]; d: number; score: number } | null = null;
-
-  for (let n = 1; n <= 12; n++) {
-    const d = snap((L - (n - 1) * a) / n);
-    if (d < 2) break;
-    const rows = packRows(makeUnits(order, d), W);
-    if (rows.length > n) continue;
-    const flat = rows.flat().flatMap(u => u.items.map(it => it.z));
-    const score = flat.reduce((s, z) => s + Math.abs(Math.log(z.w / z.l)), 0) / Math.max(flat.length, 1);
-    if (!best || score < best.score) best = { rows, d, score };
-  }
-
-  let fits = true;
-  if (!best) {
-    // Does not fit: rows of 8 m depth that run out of the hall, reported to the user.
-    fits = false;
-    best = { rows: packRows(makeUnits(order, 8), W), d: 8, score: 0 };
-  }
-
+function fill(units: Unit[], segs: Seg[], d: number, aisle: number, separate: boolean): Fill {
   const placed: Zone[] = [];
-  best.rows.forEach((row, i) => {
-    const y = snap(i * (best!.d + a));
-    let x = i % 2 === 0 ? 0 : W;
-    for (const u of row) {
-      if (i % 2 !== 0) x -= u.w;
-      for (const it of u.items) placed.push({ ...it.z, x: snap(x), y: snap(y + it.dy), placed: true });
-      if (i % 2 === 0) x += u.w;
+  let si = 0, lane = 0, s = 0, lanes = 1, fits = true, lastGroup: string | null = null;
+  const laneInfo = (g: Seg) => {
+    const depth = g.axis === 'x' ? g.l : g.w;
+    const k = Math.max(1, Math.floor((depth + aisle) / (d + aisle) + 1e-6));
+    return { k, ld: Math.floor(((depth - (k - 1) * aisle) / k) / 0.05 + 1e-6) * 0.05, len: g.axis === 'x' ? g.w : g.l };
+  };
+  // a single zone spans the lane depth and keeps its area; stacked small zones keep their unit length
+  const ulen = (u: Unit, ld: number) => (u.items.length === 1 ? Math.max(snap(u.items[0].z.target / ld), 1) : u.len);
+  const stackOk = (u: Unit, ld: number) => u.items.length === 1 || u.items[u.items.length - 1].off + u.items[u.items.length - 1].depth <= ld + 1e-6;
+
+  for (const u of units) {
+    let outside = false;
+    for (;;) {
+      if (si >= segs.length) { outside = true; fits = false; break; }
+      const g = segs[si], li = laneInfo(g);
+      const newGroup = separate && lastGroup !== null && u.group !== lastGroup && s > 0;
+      if (!newGroup && s + ulen(u, li.ld) <= li.len + 1e-6 && stackOk(u, li.ld)) break;
+      // otherwise the next lane (a zone too big for an empty lane skips it, e.g. a short S connector)
+      lane++; s = 0; lanes++;
+      if (lane >= li.k) { si++; lane = 0; }
     }
-  });
-  const byId = new Map(placed.map(z => [z.id, z]));
-  return { zones: p.zones.map(z => byId.get(z.id) ?? z), fits, rows: best.rows.length };
+    if (outside) {
+      // past the last segment: continue next to the building so nothing is lost
+      const last = segs[segs.length - 1];
+      for (const it of u.items) placed.push({ ...it.z, x: snap(last.x + last.w + 2 + s), y: snap(last.y + it.off), w: u.len, l: it.depth, placed: true });
+      s += u.len; continue;
+    }
+    const g = segs[si], li = laneInfo(g), len = ulen(u, li.ld);
+    const forward = (lane % 2 === 0) === (g.sign === 1);
+    const a0 = forward ? s : li.len - s - len;   // along the segment
+    const c0 = lane * (li.ld + aisle);           // across the segment
+    for (const it of u.items) {
+      const depth = u.items.length === 1 ? li.ld : it.depth;
+      const r = g.axis === 'x'
+        ? { x: g.x + a0, y: g.y + c0 + it.off, w: len, l: depth }
+        : { x: g.x + c0 + it.off, y: g.y + a0, w: depth, l: len };
+      placed.push({ ...it.z, x: snap(r.x), y: snap(r.y), w: snap(r.w), l: snap(r.l), placed: true });
+    }
+    s = snap(s + len);
+    lastGroup = u.group;
+  }
+  const score = placed.reduce((acc, z) => acc + Math.abs(Math.log(z.w / z.l)), 0) / Math.max(placed.length, 1);
+  return { zones: placed, fits, lanes, score };
 }
 
-// Smallest hall (3:2, whole metres) in which the automatic arrangement fits, starting from
+// Lays the zones along the building shape. Tries a range of lane depths and keeps the arrangement that fits
+// with the most square-like zones. With an automatic wing width (L / U / S) the wing grows until it fits.
+export function autoArrange(p: Project): ArrangeResult {
+  const st = layoutSettings(p);
+  const a = Math.max(0, p.aisle);
+  const order = flowOrder(p, st.groupBy).map(id => p.zones.find(z => z.id === id)!);
+  const total = order.reduce((s, z) => s + z.target, 0);
+  const { width: W, length: L } = p.hall;
+  const swap = st.rot === 90 || st.rot === 270;
+  const Wl = swap ? L : W, Ll = swap ? W : L;
+  const key = (z: Zone) => groupKey(z, st.groupBy);
+  const top = maxWing(st.shape, Wl, Ll);
+
+  const tryWing = (wing: number) => {
+    const segs = segments(st.shape, Wl, Ll, wing);
+    const minDepth = Math.min(...segs.map(g => (g.axis === 'x' ? g.l : g.w)));
+    let best: Fill | null = null;
+    const tried = new Set<number>();
+    for (let i = 0; i <= 24; i++) {
+      const d = snap(Math.max(3, Math.min(minDepth, 3 + (minDepth - 3) * (i / 24) ** 1.5)), 0.5);
+      if (tried.has(d)) continue;
+      tried.add(d);
+      const f = fill(makeUnits(order, d, key), segs, d, a, st.separate);
+      if (!best || (f.fits && !best.fits) || (f.fits === best.fits && f.score < best.score)) best = f;
+    }
+    return { fill: best!, segs, wing };
+  };
+
+  let r: { fill: Fill; segs: Seg[]; wing: number };
+  if (st.shape === 'I') r = tryWing(top);
+  else if (st.wing !== null) r = tryWing(Math.min(st.wing, top));
+  else {
+    let wing = wingFor(st.shape, Wl, Ll, total * 1.08);
+    r = tryWing(wing);
+    while (!r.fill.fits && wing < top) { wing = Math.min(top, snap(wing * 1.08 + 0.5, 0.5)); r = tryWing(wing); }
+  }
+  const world = r.fill.zones.map(z => ({ ...z, ...rotRect(z, st.rot, W, L) }));
+  const byId = new Map(world.map(z => [z.id, z]));
+  return {
+    zones: p.zones.map(z => byId.get(z.id) ?? z), fits: r.fill.fits, rows: r.fill.lanes,
+    footprint: r.segs.map(g => rotRect(g, st.rot, W, L)), wing: r.wing,
+  };
+}
+
+// Applies the arrangement and stores the building outline with it.
+export function arranged(p: Project): { project: Project; result: ArrangeResult } {
+  const r = autoArrange(p);
+  const st = layoutSettings(p);
+  return { project: { ...p, zones: r.zones, hall: { ...p.hall, footprint: st.shape === 'I' ? undefined : r.footprint, wing: st.shape === 'I' ? undefined : r.wing } }, result: r };
+}
+
+// Smallest hall (3:2, whole metres, rectangular) in which the arrangement fits, starting from
 // total area x gross-up factor. Used when the brief gives no hall size.
 export function proposeHall(p: Project, grossUp: number): { width: number; length: number } {
   const total = p.zones.reduce((s, z) => s + z.target, 0);
+  const q: Project = { ...p, layout: { ...layoutSettings(p), shape: 'I', rot: 0 } };
   let area = Math.max(total * grossUp, 100);
   for (let k = 0; k < 40; k++) {
     const width = Math.ceil(Math.sqrt(area * 1.5)), length = Math.ceil(area / width);
-    if (autoArrange({ ...p, hall: { ...p.hall, width, length } }).fits) return { width, length };
+    if (autoArrange({ ...q, hall: { ...q.hall, width, length } }).fits) return { width, length };
     area *= 1.05;
   }
   const width = Math.ceil(Math.sqrt(area * 1.5));
   return { width, length: Math.ceil(area / width) };
+}
+
+// Outer size for the chosen shape with balanced proportions (wing t): L 2.5t x 2.5t, U 3t x 2.5t,
+// S 3t x 5t, I 3:2; enlarged in 5 % steps until the arrangement fits.
+export function proposeForShape(p: Project): { width: number; length: number } {
+  const st = layoutSettings(p);
+  const total = p.zones.reduce((s, z) => s + z.target, 0);
+  const k = { I: 1, L: 4, U: 6, S: 11 }[st.shape];
+  const swap = st.rot === 90 || st.rot === 270;
+  let area = Math.max(total * 1.08, 100);
+  let best = { width: 10, length: 10 };
+  for (let i = 0; i < 40; i++) {
+    let wl: number, ll: number;
+    if (st.shape === 'I') { wl = Math.sqrt(area * 1.5); ll = area / wl; }
+    else {
+      const t = Math.sqrt(area / k);
+      [wl, ll] = st.shape === 'L' ? [2.5 * t, 2.5 * t] : st.shape === 'U' ? [3 * t, 2.5 * t] : [3 * t, 5 * t];
+    }
+    const width = Math.ceil(swap ? ll : wl), length = Math.ceil(swap ? wl : ll);
+    best = { width, length };
+    if (autoArrange({ ...p, hall: { ...p.hall, width, length }, layout: { ...st, wing: null } }).fits) return best;
+    area *= 1.05;
+  }
+  return best;
+}
+
+// Area of a zone inside the building outline.
+export function insideArea(p: Project, z: Rect): number {
+  const rects = p.hall.footprint?.length ? p.hall.footprint : [{ x: 0, y: 0, w: p.hall.width, l: p.hall.length }];
+  return rects.reduce((s, r) => {
+    const dx = Math.min(z.x + z.w, r.x + r.w) - Math.max(z.x, r.x);
+    const dy = Math.min(z.y + z.l, r.y + r.l) - Math.max(z.y, r.y);
+    return s + (dx > 0 && dy > 0 ? dx * dy : 0);
+  }, 0);
 }
 
 // Free spot for a single zone: first position on a 1 m scan that overlaps nothing.
@@ -134,7 +281,7 @@ export function layoutIssues(p: Project): Issue[] {
       if (o > 0) out.push({ level: 'error', text: `${zoneLabel(placed[i])} overlaps ${zoneLabel(placed[j])} (${o.toFixed(1)} m²).`, zoneIds: [placed[i].id, placed[j].id] });
     }
   for (const z of placed) {
-    if (z.x < -1e-6 || z.y < -1e-6 || z.x + z.w > p.hall.width + 1e-6 || z.y + z.l > p.hall.length + 1e-6)
+    if (insideArea(p, z) < zoneArea(z) - 0.05)
       out.push({ level: 'error', text: `${zoneLabel(z)} extends outside the hall.`, zoneIds: [z.id] });
     const dev = z.target > 0 ? (zoneArea(z) - z.target) / z.target : 0;
     if (Math.abs(dev) > 0.05)

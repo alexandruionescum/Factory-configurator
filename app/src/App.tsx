@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProject } from './lib/store';
 import { parseProject } from './lib/model';
+import { download, fileName, projectJson } from './lib/exports';
 import { layoutIssues } from './lib/layout';
 import { useAsk } from './components/Confirm';
 import ThemeSwitch from './components/ThemeSwitch';
@@ -11,20 +12,18 @@ import ZonesStep from './steps/ZonesStep';
 import LayoutStep from './steps/LayoutStep';
 import FlowsStep from './steps/FlowsStep';
 import View3DStep from './steps/View3DStep';
-import VistableStep from './steps/VistableStep';
 import ExportStep from './steps/ExportStep';
 
 // black wordmark follows the theme text colour; the orange bars stay orange
 const LOGO = logoSvg.replace(/fill="#000"/g, 'fill="currentColor"');
 
 const STEPS = [
-  { key: 'hall', title: 'Hall', sub: 'size, aisles' },
+  { key: 'hall', title: 'Factory size', sub: 'brief, dimensions' },
   { key: 'zones', title: 'Zones', sub: 'areas from the brief' },
   { key: 'layout', title: 'Layout', sub: '2D plan' },
   { key: 'flows', title: 'Flows', sub: 'families, routes' },
   { key: '3d', title: '3D', sub: 'overview' },
-  { key: 'vistable', title: 'visTABLE', sub: 'blocks, flows, Pack and Go' },
-  { key: 'export', title: 'Export', sub: 'PNG, report, project' },
+  { key: 'export', title: 'Export', sub: 'image, PowerPoint' },
 ] as const;
 type StepKey = typeof STEPS[number]['key'];
 
@@ -75,6 +74,7 @@ export default function App() {
           <button onClick={store.redo} disabled={!store.canRedo} title="Redo (Ctrl+Y)">↷</button>
           <button onClick={async () => { if (await ask({ text: 'Start an empty project? The current project is lost unless you saved it (Export → Project).', ok: 'Start new project' })) { store.reset(); setStep('hall'); } }}>New</button>
           <button onClick={() => file.current?.click()}>Open</button>
+          <button title="Save the project as a file (.json) to open it later" onClick={() => download(projectJson(p), fileName(p, 'project', 'json'))}>Save</button>
           <button onClick={async () => { if (await ask({ text: 'Load the example project (fictitious data)? The current project will be replaced.', ok: 'Load example' })) store.loadExample(); }}>Example</button>
           <input ref={file} type="file" accept=".json,application/json" hidden onChange={e => { const f = e.target.files?.[0]; if (f) open(f); e.target.value = ''; }} />
         </div>
@@ -96,7 +96,6 @@ export default function App() {
         {step === 'layout' && <LayoutStep store={store} />}
         {step === 'flows' && <FlowsStep store={store} />}
         {step === '3d' && <View3DStep project={p} />}
-        {step === 'vistable' && <VistableStep store={store} />}
         {step === 'export' && <ExportStep store={store} />}
       </main>
     </div>

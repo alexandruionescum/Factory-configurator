@@ -22,7 +22,24 @@ export function matchAreaType(text: string): AreaType | null {
   return AREA_TYPES.find(t => t.label.toLowerCase() === s || t.aliases.includes(s))?.key ?? null;
 }
 
-export interface Hall { width: number; length: number; height: number }
+export interface Rect { x: number; y: number; w: number; l: number }
+
+export interface Hall {
+  width: number; length: number; height: number;  // bounding box of the building
+  footprint?: Rect[];  // building outline for L / U / S shapes (non-overlapping rectangles); none = full box
+  wing?: number;       // wing width used by the last arrangement (L / U / S)
+}
+
+export type ShapeType = 'I' | 'L' | 'U' | 'S';
+export type GroupBy = 'stream' | 'type' | 'flow';
+export interface LayoutSettings {
+  shape: ShapeType;
+  rot: 0 | 90 | 180 | 270;
+  wing: number | null;   // wing width of L / U / S in m; null = sized from the total area
+  groupBy: GroupBy;
+  separate: boolean;     // each group starts on a new lane
+}
+export const defaultLayout = (): LayoutSettings => ({ shape: 'I', rot: 0, wing: null, groupBy: 'stream', separate: false });
 
 export interface Zone {
   id: string;
@@ -60,6 +77,7 @@ export interface Project {
   zones: Zone[];
   products: Product[];
   meta?: ProjectMeta;
+  layout?: LayoutSettings;
 }
 
 export interface ProjectMeta {
@@ -95,7 +113,7 @@ export function newZone(partial: Partial<Zone> = {}): Zone {
 }
 
 export function emptyProject(): Project {
-  return { schema: 1, name: 'New project', rev: 1, hall: { width: 60, length: 40, height: 8 }, aisle: 3.5, zones: [], products: [] };
+  return { schema: 1, name: 'New project', rev: 1, hall: { width: 60, length: 40, height: 8 }, aisle: 0, zones: [], products: [] };
 }
 
 // Demo data so the interface can be tried without a brief. Clearly fictitious.
@@ -116,7 +134,7 @@ export function exampleProject(): Project {
   const id = (code: string) => zones.find(q => q.code === code)!.id;
   return {
     schema: 1, name: 'Example (fictitious data)', rev: 1,
-    hall: { width: 84, length: 48, height: 9 }, aisle: 3.5, zones,
+    hall: { width: 60, length: 54, height: 9 }, aisle: 0, zones,
     products: [
       { id: uid(), name: 'Family A', color: productColor(0), volume: 120000, perContainer: 50,
         route: ['GR', 'RM', 'MA', 'WE', 'PA', 'AS', 'QC', 'FG', 'SH'].map(id) },
@@ -124,6 +142,12 @@ export function exampleProject(): Project {
         route: ['GR', 'RM', 'MA', 'AS', 'QC', 'FG', 'SH'].map(id) },
     ],
   };
+}
+
+// Replaces the assumption about the factory size (the brief may have proposed one); null removes it.
+export function withSizeNote(p: Project, note: string | null): Project {
+  const rest = (p.meta?.assumptions ?? []).filter(a => !a.startsWith('Factory size'));
+  return { ...p, meta: { ...p.meta, assumptions: note ? [...rest, note] : rest } };
 }
 
 // Light shape check for files opened by the user.

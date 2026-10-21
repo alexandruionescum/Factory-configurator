@@ -14,19 +14,20 @@ function buildScene(p: Project, volumes: boolean, flows: boolean) {
   sun.position.set(W * 0.3, H * 4, L * 0.8);
   scene.add(sun);
 
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(W, 0.1, L), new THREE.MeshLambertMaterial({ color: 0xd4d7dd }));
-  floor.position.set(W / 2, -0.05, -L / 2);
-  scene.add(floor);
-  const shell = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(W, H, L)),
-    new THREE.LineBasicMaterial({ color: 0x6a6e79 }),
-  );
-  shell.position.set(W / 2, H / 2, -L / 2);
-  scene.add(shell);
-  // 5 m grid, clipped to the hall
+  // building outline: one floor slab and wall frame per rectangle of the footprint (L / U / S shapes)
+  const parts = p.hall.footprint?.length ? p.hall.footprint : [{ x: 0, y: 0, w: W, l: L }];
   const pts: number[] = [];
-  for (let x = 0; x <= W + 1e-6; x += 5) pts.push(x, 0.01, 0, x, 0.01, -L);
-  for (let y = 0; y <= L + 1e-6; y += 5) pts.push(0, 0.01, -y, W, 0.01, -y);
+  for (const r of parts) {
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(r.w, 0.1, r.l), new THREE.MeshLambertMaterial({ color: 0xd4d7dd }));
+    floor.position.set(r.x + r.w / 2, -0.05, -(r.y + r.l / 2));
+    scene.add(floor);
+    const shell = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(r.w, H, r.l)), new THREE.LineBasicMaterial({ color: 0x6a6e79 }));
+    shell.position.set(r.x + r.w / 2, H / 2, -(r.y + r.l / 2));
+    scene.add(shell);
+    // 5 m grid, clipped to the part
+    for (let x = Math.ceil(r.x / 5) * 5; x <= r.x + r.w + 1e-6; x += 5) pts.push(x, 0.01, -r.y, x, 0.01, -(r.y + r.l));
+    for (let y = Math.ceil(r.y / 5) * 5; y <= r.y + r.l + 1e-6; y += 5) pts.push(r.x, 0.01, -y, r.x + r.w, 0.01, -y);
+  }
   const gridGeo = new THREE.BufferGeometry();
   gridGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
   scene.add(new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color: 0xa9acb4 })));

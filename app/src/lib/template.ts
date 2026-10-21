@@ -4,7 +4,7 @@ import type { DataValidation, Worksheet } from 'exceljs';
 import { AREA_TYPES, AreaType, matchAreaType } from './model';
 import { Cell, Sheet, parseNumber, text } from './briefImport';
 
-export const TEMPLATE_VERSION = '1.0';
+export const TEMPLATE_VERSION = '1.1';
 export const PHASES = ['Launch', 'Phase 2', 'Phase 3'] as const;
 export type Phase = typeof PHASES[number];
 
@@ -15,11 +15,10 @@ export const PROJECT_FIELDS = [
   { key: 'preparedBy', label: 'Prepared by', help: 'Consultant who filled in the brief.' },
   { key: 'date', label: 'Date', help: 'YYYY-MM-DD' },
   { key: 'phase', label: 'Phase to lay out', help: 'Launch, Phase 2 or Phase 3: which area column is drawn.' },
-  { key: 'width', label: 'Hall width X (m)', help: 'Leave empty: the configurator proposes a hall from the total area.' },
-  { key: 'length', label: 'Hall length Y (m)', help: 'Leave empty together with the width.' },
+  { key: 'width', label: 'Factory width X (m)', help: 'Leave empty: the configurator proposes a size from the total area.' },
+  { key: 'length', label: 'Factory length Y (m)', help: 'Leave empty together with the width.' },
   { key: 'height', label: 'Clear height (m)', help: 'Default 8 m.' },
-  { key: 'aisle', label: 'Aisle width between zone rows (m)', help: '0 if the main aisles are listed as areas (type Transportation / aisle).' },
-  { key: 'grossUp', label: 'Gross-up factor for the hall', help: 'Used only when the hall size is empty. Default 1.15.' },
+  { key: 'grossUp', label: 'Gross-up factor', help: 'Used only when the factory size is empty. Default 1.15.' },
 ] as const;
 
 export const AREA_COLUMNS = [
@@ -99,11 +98,11 @@ export async function buildTemplate(title: string, logoPng?: string): Promise<Ar
     ['1. One row per area', 'Every room, cell, store or zone is one row on the Areas sheet. The ID links the Excel, the layout and visTABLE: keep it unique and short (e.g. CR-03, S-01).'],
     ['2. Net areas', 'Areas are net m² and already include local equipment clearance and operator / trolley access. Do not invent values: leave a cell empty if it is not known yet.'],
     ['3. Phases', 'Phase 2 and Phase 3 columns hold the TOTAL net area in that phase. Empty = unchanged. 0 = not built in that phase (future option, not drawn).'],
-    ['4. Circulation', 'Either list the main aisles as areas with type "Transportation / aisle" and set the aisle width on the Project sheet to 0, or leave them out and set the aisle width. Never both.'],
+    ['4. Circulation', 'Areas are drawn touching each other. List main aisles that belong to the brief as areas with type "Transportation / aisle". Extra aisles between zones are set later, in the Layout step.'],
     ['5. Flows', 'One row per product family. The route is the list of area IDs in process order separated by ">". Pieces per transport is the quantity on one load carrier.'],
     ['6. Adjacency', 'Adjacent to: IDs of areas that must touch this area, separated by commas. The configurator checks this on the layout.'],
     ['7. Hall', 'Leave the hall size empty to let the configurator propose one from total area x gross-up factor. The proposal is listed as an assumption in the report.'],
-    ['Used now', 'ID, stream, name, type, net area of the chosen phase, positions, adjacency, flows, hall data. Area class and notes go to the report.'],
+    ['Used now', 'ID, stream, name, type, net area of the chosen phase, positions, adjacency, flows, factory size. Area class and notes go to the report. The factory shape (I, L, U, S) is chosen in the Layout step.'],
   ];
   const top = logoPng ? 5 : 4;
   rules.forEach(([a, b], i) => {
@@ -208,6 +207,11 @@ export interface Brief {
   problems: string[];
 }
 
+// labels of template 1.0, still read
+const OLD_LABELS: Record<string, string> = {
+  'hall width x m': 'width', 'hall length y m': 'length', 'gross-up factor for the hall': 'grossUp', 'aisle width between zone rows m': 'aisle',
+};
+
 const norm = (s: string) => s.toLowerCase().replace(/[*()²]/g, '').replace(/\s+/g, ' ').trim();
 const find = (sheets: Sheet[], name: string) => sheets.find(s => s.name.trim().toLowerCase() === name.toLowerCase());
 
@@ -228,8 +232,9 @@ export function readBrief(sheets: Sheet[]): Brief {
   const project: Record<string, Cell> = {};
   const prj = find(sheets, 'Project');
   for (const row of prj?.rows ?? []) {
-    const f = PROJECT_FIELDS.find(p => norm(p.label) === norm(text(row[0] ?? null)));
-    if (f) project[f.key] = row[1] ?? null;
+    const label = norm(text(row[0] ?? null));
+    const key = PROJECT_FIELDS.find(p => norm(p.label) === label)?.key ?? OLD_LABELS[label];
+    if (key) project[key] = row[1] ?? null;
   }
 
   const areas: BriefArea[] = [];
