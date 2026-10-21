@@ -13,6 +13,8 @@ import ExportStep from './steps/ExportStep';
 
 // black wordmark follows the theme text colour; the orange bars stay orange
 const LOGO = logoSvg.replace(/fill="#000"/g, 'fill="currentColor"');
+// VITE_BRAND=neutral builds the same design without the EFESO logo (for public previews)
+const BRANDED = import.meta.env.VITE_BRAND !== 'neutral';
 
 const STEPS = [
   { key: 'hall', title: 'Hall', sub: 'size, aisles' },
@@ -60,8 +62,8 @@ export default function App() {
   return (
     <div className="app">
       <header className="top">
-        <div className="brand">
-          <span className="logo" role="img" aria-label="EFESO" dangerouslySetInnerHTML={{ __html: LOGO }} />
+        <div className={`brand${BRANDED ? '' : ' neutral'}`}>
+          {BRANDED && <span className="logo" role="img" aria-label="EFESO" dangerouslySetInnerHTML={{ __html: LOGO }} />}
           <span className="product">Factory Layout <em className="accent">Configurator</em></span>
         </div>
         <div className="pname">{p.name}</div>
