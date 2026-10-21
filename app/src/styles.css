@@ -253,3 +253,23 @@ svg.plan { flex: 1; min-height: 0; width: 100%; background: var(--plan-bg); bord
   .brand .product { font-size: 15px; padding-left: 12px; }
   .view3d { height: 60vh; flex: none; }
 }
+
+/* visTABLE step */
+.vt-steps { list-style: none; counter-reset: vt; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; max-width: 980px; }
+.vt-steps > li { counter-increment: vt; position: relative; padding-left: 64px; }
+.vt-steps > li::before {
+  content: counter(vt); position: absolute; left: 20px; top: 18px; width: 28px; height: 28px; display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 13px;
+}
+.vt-steps p { margin: 0 0 6px; max-width: 72ch; }
+.vt-check { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.stats.compact b { font-size: 20px; }
+.tag { display: inline-block; padding: 1px 8px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--line); color: var(--muted); }
+.tag.ok { border-color: var(--ok); color: var(--ok); }
+.tag.bad { border-color: var(--bad); color: var(--bad); }
+.file-btn { position: relative; display: inline-flex; cursor: pointer; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.file-btn span { border: 1px solid var(--ink); padding: 7px 14px; font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); background: var(--panel); }
+.file-btn:hover span { background: var(--accent-soft); border-color: var(--accent); }
+.file-btn:focus-within span { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (max-width: 900px) { .vt-steps > li { padding-left: 20px; padding-top: 52px; } .vt-steps > li::before { top: 16px; } }

@@ -46,10 +46,15 @@ așa se pot adăuga mai târziu DXF / IFC / alte programe.
 - Aplicație web.
 - Interfața în engleză.
 - Design în stilul EFESO (culori, fonturi și logo de pe efeso.com).
-- Prima versiune a interfeței: pași Hall → Zones → Layout → Flows → 3D → Export (`app/`).
+- Prima versiune a interfeței: pași Hall → Zones → Layout → Flows → 3D → visTABLE → Export (`app/`).
+- Pasul visTABLE: blocuri prin importul oficial Block Layout Table (xlsx); fluxurile se scriu în `platin_v1.xml`
+  dintr-un Pack and Go exportat de utilizator (în browser, beta). Familiile de produse din fișier se înlocuiesc.
+- Publicare: GitHub Pages din acest repo (public), automat la fiecare push: https://alexandruionescum.github.io/Factory-configurator/
 
 ## Decizii deschise
 
 - Fișiere reale de test (Excel brief + .vtlx, anonimizate) – încă nu există.
-- Unde se publică aplicația (găzduire) și dacă are conturi de utilizator.
+- Conturi de utilizator / acces restricționat (acum linkul e public).
+- Integrare Claude (citire brief, asistent) – necesită cont API și un server mic.
+- Test real al fluxurilor scrise în .vtlx (doar cu fișier synthetic până acum).
 - Alte limbi pe lângă engleză (germană, română).

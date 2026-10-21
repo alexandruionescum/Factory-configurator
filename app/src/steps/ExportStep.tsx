@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Store } from '../lib/store';
-import { BLOCK_COLUMNS, blockLayoutXlsx, blockRows, download, fileName, planPng, projectJson, reportMd } from '../lib/exports';
+import { blockRows, download, fileName, planPng, projectJson, reportMd } from '../lib/exports';
 import { layoutIssues } from '../lib/layout';
 import PlanView from '../components/PlanView';
 import { NumField } from '../components/fields';
@@ -28,16 +28,9 @@ export default function ExportStep({ store }: { store: Store }) {
         <div className="note bad">The layout has {errors.length} problem{errors.length === 1 ? '' : 's'} (overlaps or zones outside the hall). You can export, but check the Layout step.</div>
       )}
 
+      <p className="muted">Files for visTABLE (Block Layout Table, Pack and Go with flows) are in the visTABLE step.</p>
+
       <div className="export-grid">
-        <div className="card main-export">
-          <h3>Block Layout Table for visTABLE (.xlsx)</h3>
-          <p className="muted">The 22 columns of the visTABLE Block Layout Table, with block centres in mm and the colour as cell fill.
-            Import it with the Block Layout Table import in visTABLE. Existing blocks with the same unique name are updated.</p>
-          <button className="primary" disabled={!rows.length}
-            onClick={() => run('Block Layout Table', async () => download(await blockLayoutXlsx(p), fileName(p, 'block-layout', 'xlsx')))}>
-            Download .xlsx ({rows.length} blocks)
-          </button>
-        </div>
         <div className="card">
           <h3>2D plan (.png)</h3>
           <p className="muted">Image of the plan with zones and flows, for presentations or for approval.</p>
@@ -55,19 +48,6 @@ export default function ExportStep({ store }: { store: Store }) {
         </div>
       </div>
       {msg && <p className="muted">{msg}</p>}
-
-      <div className="card table-wrap">
-        <h3>Block Layout Table preview</h3>
-        <table className="grid small">
-          <thead><tr>{BLOCK_COLUMNS.map(c => <th key={c}>{c}</th>)}</tr></thead>
-          <tbody>
-            {rows.map((r, i) => (
-              <tr key={i}>{r.map((v, j) => <td key={j} className={typeof v === 'number' ? 'num' : ''} style={j === 11 ? { background: String(v) } : undefined}>{j === 11 ? '' : String(v)}</td>)}</tr>
-            ))}
-            {!rows.length && <tr><td colSpan={22} className="empty">No zones placed on the plan.</td></tr>}
-          </tbody>
-        </table>
-      </div>
 
       <div className="hidden-plan"><PlanView project={p} showFlows svgId="export-plan" /></div>
     </div>

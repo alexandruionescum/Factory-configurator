@@ -10,6 +10,7 @@ import ZonesStep from './steps/ZonesStep';
 import LayoutStep from './steps/LayoutStep';
 import FlowsStep from './steps/FlowsStep';
 import View3DStep from './steps/View3DStep';
+import VistableStep from './steps/VistableStep';
 import ExportStep from './steps/ExportStep';
 
 // black wordmark follows the theme text colour; the orange bars stay orange
@@ -23,7 +24,8 @@ const STEPS = [
   { key: 'layout', title: 'Layout', sub: '2D plan' },
   { key: 'flows', title: 'Flows', sub: 'families, routes' },
   { key: '3d', title: '3D', sub: 'overview' },
-  { key: 'export', title: 'Export', sub: 'visTABLE, PNG, report' },
+  { key: 'vistable', title: 'visTABLE', sub: 'blocks, flows, Pack and Go' },
+  { key: 'export', title: 'Export', sub: 'PNG, report, project' },
 ] as const;
 type StepKey = typeof STEPS[number]['key'];
 
@@ -95,6 +97,7 @@ export default function App() {
         {step === 'layout' && <LayoutStep store={store} />}
         {step === 'flows' && <FlowsStep store={store} />}
         {step === '3d' && <View3DStep project={p} />}
+        {step === 'vistable' && <VistableStep store={store} />}
         {step === 'export' && <ExportStep store={store} />}
       </main>
     </div>
