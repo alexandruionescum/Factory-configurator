@@ -280,3 +280,11 @@ svg.plan { flex: 1; min-height: 0; width: 100%; background: var(--plan-bg); bord
 .tag.warn { border-color: var(--warn); color: var(--warn); }
 .skipped summary { cursor: pointer; color: var(--muted); }
 .skipped ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+
+/* brief import */
+.card.brief { border-top: 3px solid var(--accent); }
+.file-btn.primary span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
+.file-btn.primary:hover span { background: var(--accent-hover); border-color: var(--accent-hover); }
+ul.plain { margin: 6px 0 0; padding-left: 18px; }
+ul.plain li + li { margin-top: 3px; }
+.stats.compact { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }

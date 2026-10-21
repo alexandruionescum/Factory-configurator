@@ -35,6 +35,11 @@ export interface Zone {
   color: string;         // #RRGGBB
   fixedArea: boolean;    // resizing one side keeps the area
   placed: boolean;
+  // from the brief template (optional)
+  stream?: string;       // department / stream; zones of one stream are kept together
+  adjacent?: string[];   // codes of zones that must touch this one
+  positions?: number;    // workplaces / equipment positions in the chosen phase
+  notes?: string;
 }
 
 export interface Product {
@@ -54,6 +59,16 @@ export interface Project {
   aisle: number;         // aisle width between block rows, m
   zones: Zone[];
   products: Product[];
+  meta?: ProjectMeta;
+}
+
+export interface ProjectMeta {
+  client?: string;
+  site?: string;
+  preparedBy?: string;
+  date?: string;
+  phase?: string;
+  assumptions?: string[]; // values the configurator had to assume; listed in the report
 }
 
 export const SNAP = 0.05; // 5 cm grid, as recommended for visTABLE block edges

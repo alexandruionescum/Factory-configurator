@@ -1,36 +1,14 @@
 // Zone list from an Excel brief: read the workbook, find the header row and the columns
 // (English / German / Romanian headers), then compare with the zones already in the project.
 import { AreaType, Project, Zone, matchAreaType, newZone, snap } from './model';
+import { readXlsx } from './xlsxRead';
 
 export type Cell = string | number | null;
 export interface Sheet { name: string; rows: Cell[][] }
 
+// Cell values only; see xlsxRead.ts for why this does not use exceljs.
 export async function readWorkbook(buf: ArrayBuffer): Promise<Sheet[]> {
-  const ExcelJS = (await import('exceljs')).default;
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(buf);
-  return wb.worksheets.map(ws => {
-    const rows: Cell[][] = [];
-    ws.eachRow({ includeEmpty: true }, (row, r) => {
-      const cells: Cell[] = [];
-      row.eachCell({ includeEmpty: true }, (c, i) => { cells[i - 1] = cellValue(c.value); });
-      rows[r - 1] = cells;
-    });
-    return { name: ws.name, rows: Array.from(rows, r => r ?? []) };
-  });
-}
-
-// formulas give their cached result, rich text its plain text
-function cellValue(v: unknown): Cell {
-  if (v === null || v === undefined) return null;
-  if (typeof v === 'number' || typeof v === 'string') return v;
-  if (typeof v === 'boolean') return String(v);
-  if (v instanceof Date) return v.toISOString().slice(0, 10);
-  const o = v as { result?: unknown; richText?: { text: string }[]; text?: string };
-  if (o.richText) return o.richText.map(t => t.text).join('');
-  if (o.result !== undefined) return cellValue(o.result);
-  if (o.text !== undefined) return o.text;
-  return null;
+  return readXlsx(buf);
 }
 
 export const text = (c: Cell) => (c === null ? '' : String(c).trim());

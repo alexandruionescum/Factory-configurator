@@ -5,6 +5,7 @@ import { layoutIssues } from './lib/layout';
 import { useAsk } from './components/Confirm';
 import ThemeSwitch from './components/ThemeSwitch';
 import logoSvg from './assets/efeso-logo.svg?raw';
+import { BRANDED } from './lib/brand';
 import HallStep from './steps/HallStep';
 import ZonesStep from './steps/ZonesStep';
 import LayoutStep from './steps/LayoutStep';
@@ -15,8 +16,6 @@ import ExportStep from './steps/ExportStep';
 
 // black wordmark follows the theme text colour; the orange bars stay orange
 const LOGO = logoSvg.replace(/fill="#000"/g, 'fill="currentColor"');
-// VITE_BRAND=neutral builds the same design without the EFESO logo (for public previews)
-const BRANDED = import.meta.env.VITE_BRAND !== 'neutral';
 
 const STEPS = [
   { key: 'hall', title: 'Hall', sub: 'size, aisles' },
@@ -92,7 +91,7 @@ export default function App() {
       </nav>
 
       <main className="main">
-        {step === 'hall' && <HallStep store={store} />}
+        {step === 'hall' && <HallStep store={store} onGenerated={() => setStep('layout')} />}
         {step === 'zones' && <ZonesStep store={store} />}
         {step === 'layout' && <LayoutStep store={store} />}
         {step === 'flows' && <FlowsStep store={store} />}

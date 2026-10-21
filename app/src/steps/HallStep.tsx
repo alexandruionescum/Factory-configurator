@@ -1,8 +1,9 @@
 import { Store } from '../lib/store';
 import { NumField } from '../components/fields';
 import { fmt } from '../lib/flows';
+import BriefStart from '../components/BriefStart';
 
-export default function HallStep({ store }: { store: Store }) {
+export default function HallStep({ store, onGenerated }: { store: Store; onGenerated: () => void }) {
   const { project: p, update } = store;
   const setHall = (k: 'width' | 'length' | 'height', v: number) => update(q => ({ ...q, hall: { ...q.hall, [k]: v } }));
   const total = p.zones.reduce((s, z) => s + z.target, 0);
@@ -12,6 +13,8 @@ export default function HallStep({ store }: { store: Store }) {
     <div className="step-body narrow">
       <h2>Project and hall</h2>
       <p className="lead">Basic building data. All dimensions are in metres; the export converts them to millimetres for visTABLE.</p>
+
+      <BriefStart store={store} onGenerated={onGenerated} />
 
       <div className="card form">
         <label className="field wide">

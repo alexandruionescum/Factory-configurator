@@ -49,6 +49,9 @@ așa se pot adăuga mai târziu DXF / IFC / alte programe.
 - Prima versiune a interfeței: pași Hall → Zones → Layout → Flows → 3D → visTABLE → Export (`app/`).
 - Pasul visTABLE: blocuri prin importul oficial Block Layout Table (xlsx); fluxurile se scriu în `platin_v1.xml`
   dintr-un Pack and Go exportat de utilizator (în browser, beta). Familiile de produse din fișier se înlocuiesc.
+- Flux de lucru cu clientul: colegii completează template-ul Excel (Project, Areas, Flows; descărcat din pasul 1),
+  îl importă pe site (pasul 1, Import filled brief) și site-ul generează layout-ul (grupat pe Stream, în ordinea fluxului).
+  Fazele sunt cumulative (Launch / Phase 2 / Phase 3); dimensiunea halei, dacă lipsește, e propusă și listată ca presupunere.
 - Publicare: GitHub Pages din acest repo (public), automat la fiecare push: https://alexandruionescum.github.io/Factory-configurator/
 
 ## Decizii deschise
