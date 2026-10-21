@@ -3,6 +3,7 @@ import { useProject } from './lib/store';
 import { parseProject } from './lib/model';
 import { layoutIssues } from './lib/layout';
 import { useAsk } from './components/Confirm';
+import ThemeSwitch from './components/ThemeSwitch';
 import logoSvg from './assets/efeso-logo.svg?raw';
 import HallStep from './steps/HallStep';
 import ZonesStep from './steps/ZonesStep';
@@ -67,6 +68,7 @@ export default function App() {
           <span className="product">Factory Layout <em className="accent">Configurator</em></span>
         </div>
         <div className="pname">{p.name}</div>
+        <ThemeSwitch />
         <div className="actions">
           <button onClick={store.undo} disabled={!store.canUndo} title="Undo (Ctrl+Z)">↶</button>
           <button onClick={store.redo} disabled={!store.canRedo} title="Redo (Ctrl+Y)">↷</button>

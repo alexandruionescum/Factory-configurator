@@ -114,6 +114,11 @@ textarea { width: 100%; font-family: ui-monospace, Consolas, monospace; font-siz
 .brand.neutral .product { border-left: none; padding-left: 0; }
 .top .pname { color: var(--muted); flex: 1; min-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); }
+.seg button { border: none; border-left: 1px solid var(--line); padding: 6px 11px; font-size: 11px; color: var(--muted); }
+.seg button:first-child { border-left: none; }
+.seg button.on { background: var(--ink); color: var(--panel); }
+.seg button.on:hover:not(:disabled) { background: var(--ink); }
 
 .steps { display: flex; gap: 0; padding: 0 24px; background: var(--panel); border-bottom: 1px solid var(--line); overflow-x: auto; }
 .steps button {
