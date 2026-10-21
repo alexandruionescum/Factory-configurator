@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useProject } from './lib/store';
 import { parseProject } from './lib/model';
 import { layoutIssues } from './lib/layout';
+import { useAsk } from './components/Confirm';
 import HallStep from './steps/HallStep';
 import ZonesStep from './steps/ZonesStep';
 import LayoutStep from './steps/LayoutStep';
@@ -26,6 +27,7 @@ export default function App() {
     try { return (localStorage.getItem('factory-configurator.step') as StepKey) || 'hall'; } catch { return 'hall'; }
   });
   const file = useRef<HTMLInputElement>(null);
+  const ask = useAsk();
 
   useEffect(() => { try { localStorage.setItem('factory-configurator.step', step); } catch { /* ignore */ } }, [step]);
 
@@ -41,7 +43,7 @@ export default function App() {
 
   const open = async (f: File) => {
     try { store.replace(parseProject(await f.text())); setStep('layout'); }
-    catch (e) { alert((e as Error).message); }
+    catch (e) { ask({ text: (e as Error).message, cancel: null }); }
   };
 
   const badge = (k: StepKey) => {
@@ -59,9 +61,9 @@ export default function App() {
         <div className="actions">
           <button onClick={store.undo} disabled={!store.canUndo} title="Undo (Ctrl+Z)">↶</button>
           <button onClick={store.redo} disabled={!store.canRedo} title="Redo (Ctrl+Y)">↷</button>
-          <button onClick={() => { if (confirm('Start an empty project? The current project is lost unless you saved it (Export → Project).')) { store.reset(); setStep('hall'); } }}>New</button>
+          <button onClick={async () => { if (await ask({ text: 'Start an empty project? The current project is lost unless you saved it (Export → Project).', ok: 'Start new project' })) { store.reset(); setStep('hall'); } }}>New</button>
           <button onClick={() => file.current?.click()}>Open</button>
-          <button onClick={() => { if (confirm('Load the example project (fictitious data)? The current project will be replaced.')) store.loadExample(); }}>Example</button>
+          <button onClick={async () => { if (await ask({ text: 'Load the example project (fictitious data)? The current project will be replaced.', ok: 'Load example' })) store.loadExample(); }}>Example</button>
           <input ref={file} type="file" accept=".json,application/json" hidden onChange={e => { const f = e.target.files?.[0]; if (f) open(f); e.target.value = ''; }} />
         </div>
       </header>

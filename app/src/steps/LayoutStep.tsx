@@ -5,9 +5,11 @@ import { autoArrange, findFreeSpot, layoutIssues } from '../lib/layout';
 import PlanView from '../components/PlanView';
 import { NumField } from '../components/fields';
 import Issues from '../components/Issues';
+import { useAsk } from '../components/Confirm';
 
 export default function LayoutStep({ store }: { store: Store }) {
   const { project: p, update, checkpoint } = store;
+  const ask = useAsk();
   const [sel, setSel] = useState<string | null>(null);
   const [showFlows, setShowFlows] = useState(true);
   const [note, setNote] = useState('');
@@ -18,8 +20,8 @@ export default function LayoutStep({ store }: { store: Store }) {
   const change = (id: string, patch: Partial<Zone>, record = true) =>
     update(q => ({ ...q, zones: q.zones.map(o => (o.id === id ? { ...o, ...patch } : o)) }), record);
 
-  const arrange = () => {
-    if (p.zones.some(q => q.placed) && !confirm('Auto-arrange moves all zones. Continue? (you can undo it)')) return;
+  const arrange = async () => {
+    if (p.zones.some(q => q.placed) && !(await ask({ text: 'Auto-arrange moves all zones. Continue? You can undo it with Ctrl+Z.', ok: 'Auto-arrange' }))) return;
     const r = autoArrange(p);
     update(q => ({ ...q, zones: r.zones }));
     setNote(r.fits

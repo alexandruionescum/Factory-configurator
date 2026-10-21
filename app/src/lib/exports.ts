@@ -10,7 +10,25 @@ export function fileName(p: Project, topic: string, ext: string) {
   return `${ymd} ${name}_v${String(p.rev).padStart(2, '0')}_${topic}.${ext}`;
 }
 
-export function download(blob: Blob, name: string) {
+// Inside the claude.ai preview viewer plain downloads are blocked; there the file goes through its
+// `downloads` capability (the viewer confirms the save). Everywhere else: a normal browser download.
+interface HostDownloads { save(r: { filename: string; data: Blob }): Promise<unknown> }
+type Host = { use?: (name: string) => Promise<HostDownloads | null> };
+
+export async function download(blob: Blob, name: string) {
+  const host = (window as unknown as { claude?: Host }).claude;
+  if (host?.use) {
+    const dl = await host.use('downloads');
+    if (dl) {
+      try { await dl.save({ filename: name, data: blob }); }
+      catch (e) {
+        const code = (e as { code?: string }).code;
+        if (code === 'declined') throw new Error('save cancelled');
+        throw new Error((e as { message?: string }).message ?? 'save failed');
+      }
+      return;
+    }
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = name;

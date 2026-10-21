@@ -6,5 +6,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 export default defineConfig({
   base: './',
   plugins: [react(), viteSingleFile()],
+  // ASCII-only output: libraries contain literal U+FFFD characters that some hosts reject
+  esbuild: { charset: 'ascii' },
   build: { chunkSizeWarningLimit: 4000 },
 });
