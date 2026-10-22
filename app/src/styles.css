@@ -137,8 +137,8 @@ textarea { width: 100%; font-family: ui-monospace, Consolas, monospace; font-siz
 .steps .t { display: flex; flex-direction: column; text-align: left; line-height: 1.2; }
 .steps .t b { font-weight: 500; color: var(--ink); }
 .steps small { color: var(--muted); font-size: 11px; }
-.badge { background: var(--n2); color: var(--n6); padding: 0 7px; font-size: 11px; font-weight: 700; }
-.badge.bad { background: var(--bad); color: #FFFFFF; }
+.badge { min-width: 24px; height: 24px; padding: 0; display: grid; place-items: center; background: var(--n2); color: var(--n6); border: 1px solid var(--line); font-size: 12px; font-weight: 700; box-sizing: border-box; }
+.badge.bad { background: var(--bad); border-color: var(--bad); color: #FFFFFF; }
 
 .main { min-height: 0; overflow: hidden; }
 .step-body { height: 100%; overflow: auto; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 16px; }
