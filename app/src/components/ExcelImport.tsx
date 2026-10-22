@@ -59,7 +59,7 @@ export default function ExcelImport({ store }: { store: Store }) {
       <h3>Import from Excel</h3>
       <p className="muted">Load the brief as .xlsx. Columns are recognised by their headings (English, German or Romanian). You see every change before it is applied; zones keep their place on the plan and are resized to the new area.</p>
       <div className="row">
-        <label className="file-btn">
+        <label className="file-btn primary wide">
           <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e => { const f = e.target.files?.[0]; if (f) load(f); e.target.value = ''; }} />
           <span>Choose Excel file</span>
         </label>

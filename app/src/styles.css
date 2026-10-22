@@ -292,6 +292,8 @@ svg.plan { flex: 1; min-height: 0; width: 100%; background: var(--plan-bg); bord
 .card.brief .row > button { border-color: var(--ink); }
 @media (max-width: 600px) { .card.brief .row > button, .card.brief .file-btn, .card.brief .file-btn span { width: 100%; } }
 .file-btn.primary span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
+.file-btn.wide { display: flex; flex: 1 1 100%; }
+.file-btn.wide span { flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; }
 .file-btn.primary:hover span { background: var(--accent-hover); border-color: var(--accent-hover); }
 ul.plain { margin: 6px 0 0; padding-left: 18px; }
 ul.plain li + li { margin-top: 3px; }

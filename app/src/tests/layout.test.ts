@@ -56,6 +56,14 @@ describe('automatic arrangement', () => {
     expect(arranged({ ...p, hall: { ...p.hall, ...h } }).result.fits).toBe(true);
   });
 
+  it('warns when a zone needs more clear height than the factory has', () => {
+    const p = exampleProject();
+    p.zones[0].height = p.hall.height + 3;
+    p.zones[1].height = p.hall.height - 1;
+    const warns = layoutIssues(p).filter(i => i.text.includes('clear height'));
+    expect(warns.map(w => w.zoneIds[0])).toEqual([p.zones[0].id]);
+  });
+
   it('measures the building, not the outer box, for L / U / S', () => {
     const p = { ...bigProject(), layout: { shape: 'L' as const, rot: 0 as const, wing: null, groupBy: 'stream' as const, separate: false } };
     const { project } = arranged({ ...p, hall: { ...p.hall, ...proposeForShape(p) } });

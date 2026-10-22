@@ -286,6 +286,8 @@ export function layoutIssues(p: Project): Issue[] {
       const o = overlap(placed[i], placed[j]);
       if (o > 0) out.push({ level: 'error', text: `${zoneLabel(placed[i])} overlaps ${zoneLabel(placed[j])} (${o.toFixed(1)} m²).`, zoneIds: [placed[i].id, placed[j].id] });
     }
+  for (const z of p.zones.filter(q => q.height && q.height > p.hall.height))
+    out.push({ level: 'warn', text: `${zoneLabel(z)} needs ${z.height} m clear height; the factory has ${p.hall.height} m.`, zoneIds: [z.id] });
   for (const z of placed) {
     if (insideArea(p, z) < zoneArea(z) - 0.05)
       out.push({ level: 'error', text: `${zoneLabel(z)} extends outside the factory.`, zoneIds: [z.id] });

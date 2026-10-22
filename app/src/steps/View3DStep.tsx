@@ -33,7 +33,7 @@ function buildScene(p: Project, volumes: boolean, flows: boolean) {
   scene.add(new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color: 0xa9acb4 })));
 
   for (const z of p.zones.filter(q => q.placed)) {
-    const h = volumes ? Math.min(3, H) : 0.08;
+    const h = volumes ? Math.min(z.height ?? 3, H) : 0.08;
     const mat = new THREE.MeshLambertMaterial({ color: z.color, transparent: volumes, opacity: volumes ? 0.45 : 1 });
     const box = new THREE.Mesh(new THREE.BoxGeometry(z.w, h, z.l), mat);
     const c = zoneCenter(z);

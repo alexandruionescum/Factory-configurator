@@ -57,6 +57,7 @@ export interface Zone {
   adjacent?: string[];   // codes of zones that must touch this one
   positions?: number;    // workplaces / equipment positions in the chosen phase
   notes?: string;
+  height?: number;       // clear height the zone needs, m (empty = no requirement)
 }
 
 export interface Product {

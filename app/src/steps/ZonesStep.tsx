@@ -62,12 +62,10 @@ export default function ZonesStep({ store }: { store: Store }) {
       <h2>Zones (from the brief)</h2>
       <p className="lead">The list of required areas. Areas come from the brief; the app never invents values. The short code (e.g. "MA") is shown on the plan.</p>
 
-      <ExcelImport store={store} />
-
       <div className="card table-wrap">
         <table className="grid">
           <thead>
-            <tr><th>Code</th><th>Name</th><th>Area type</th><th className="num">Area (m²)</th><th>Colour</th><th title="Resizing keeps the area">Fixed area</th><th /></tr>
+            <tr><th>Code</th><th>Name</th><th>Area type</th><th className="num">Area (m²)</th><th className="num" title="Clear height the zone needs (empty = no requirement)">Height (m)</th><th>Colour</th><th title="Resizing keeps the area">Fixed area</th><th /></tr>
           </thead>
           <tbody>
             {p.zones.map(z => (
@@ -84,27 +82,33 @@ export default function ZonesStep({ store }: { store: Store }) {
                   </select>
                 </td>
                 <td className="num"><NumInput className="num" value={z.target} min={1} onChange={v => setTarget(z, v)} /></td>
+                <td className="num"><input className="num" inputMode="decimal" placeholder="–" aria-label="Height (m)" value={z.height ?? ''} onChange={e => {
+                  const t = e.target.value.trim(), v = Number(t.replace(',', '.'));
+                  if (t === '') set(z.id, { height: undefined }); else if (Number.isFinite(v) && v > 0) set(z.id, { height: v });
+                }} /></td>
                 <td><input type="color" value={z.color} onChange={e => set(z.id, { color: e.target.value })} /></td>
                 <td className="center"><input type="checkbox" checked={z.fixedArea} onChange={e => set(z.id, { fixedArea: e.target.checked })} /></td>
                 <td><button className="icon" title="Delete zone" onClick={() => remove(z.id)}>✕</button></td>
               </tr>
             ))}
-            {!p.zones.length && <tr><td colSpan={7} className="empty">No zones yet. Add one or paste the list from Excel.</td></tr>}
+            {!p.zones.length && <tr><td colSpan={8} className="empty">No zones yet. Add one or paste the list from Excel.</td></tr>}
           </tbody>
           <tfoot>
-            <tr><td colSpan={3}>{p.zones.length} zones</td><td className="num"><b>{fmt(total)}</b></td><td colSpan={3} /></tr>
+            <tr><td colSpan={3}>{p.zones.length} zones</td><td className="num"><b>{fmt(total)}</b></td><td colSpan={4} /></tr>
           </tfoot>
         </table>
         <button onClick={() => update(q => ({ ...q, zones: [...q.zones, newZone()] }))}>+ Add zone</button>
       </div>
 
       <div className="card">
-        <h3>Paste rows</h3>
+        <h3>Paste rows from Excel</h3>
         <p className="muted">Copy the columns <b>Code, Name, Type, Area</b> from Excel (type and code are optional) and paste them here.
           Types are recognised in English, German or Romanian (e.g. Production / Fertigung / Producție).</p>
         <textarea rows={5} value={paste} onChange={e => setPaste(e.target.value)} placeholder={'MA\tMachining\tProduction\t520\nRM\tRaw material store\tStorage\t420'} />
         <div className="row"><button className="primary" disabled={!paste.trim()} onClick={importPaste}>Add zones</button>{msg && <span className="muted">{msg}</span>}</div>
       </div>
+
+      <ExcelImport store={store} />
     </div>
   );
 }
