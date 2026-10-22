@@ -73,4 +73,18 @@ describe('PowerPoint', () => {
     expect(slides.length).toBe(6); // title, layout, overview, zone list, flows, checks
     expect(new TextDecoder().decode(files['ppt/slides/slide1.xml'])).toContain('Example (fictitious data)');
   });
+
+  it('adds a 3D slide when 3D images are given', async () => {
+    const { project } = arranged(exampleProject());
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const blob = await buildPptx(project, {
+      footer: 'Test', planAspect: 1.2, planPng: png,
+      views3d: [{ title: 'View A', png, aspect: 1.6 }, { title: 'View B', png, aspect: 1.6 }],
+    });
+    const files = unzipSync(await bytes(blob));
+    expect(Object.keys(files).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k))).toHaveLength(7);
+    const s3 = new TextDecoder().decode(files['ppt/slides/slide3.xml']);
+    expect(s3).toContain('3D views');
+    expect(s3).toContain('View B');
+  });
 });

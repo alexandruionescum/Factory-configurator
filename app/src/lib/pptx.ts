@@ -1,4 +1,4 @@
-// PowerPoint presentation of the layout (16:9): title, block layout, area overview, zone list,
+// PowerPoint presentation of the layout (16:9): title, block layout, 3D views, area overview, zone list,
 // material flows, checks and assumptions. Built in the browser with pptxgenjs.
 import type PptxT from 'pptxgenjs';
 import { AREA_TYPES, Project, areaType, zoneArea } from './model';
@@ -15,6 +15,7 @@ export interface PptxOptions {
   logoPng?: string;        // base64 PNG (branded builds)
   planPng: string;         // data URL of the plan image
   planAspect: number;      // width / height of the plan image
+  views3d?: { title: string; png: string; aspect: number }[]; // still 3D images (data URLs); slide left out when empty
 }
 
 export async function buildPptx(p: Project, o: PptxOptions): Promise<Blob> {
@@ -85,6 +86,21 @@ export async function buildPptx(p: Project, o: PptxOptions): Promise<Blob> {
     s2.addShape(pres.ShapeType.rect, { x: kx, y: y + 0.05, w: 0.18, h: 0.18, fill: { color: a.color.slice(1) }, line: { color: '999999', width: 0.5 } });
     s2.addText(a.label, { x: kx + 0.28, y, w: 2.4, h: 0.28, fontSize: 10, color: INK, fontFace: FONT });
   });
+
+  // 2b. 3D views, side by side
+  if (o.views3d?.length) {
+    const s = pres.addSlide({ masterName: 'CONTENT' });
+    title(s, '3D views', 'Overview of the block layout; zone heights from the zone list (default 3 m)');
+    const n = o.views3d.length, gap = 0.3, cw = (12.33 - gap * (n - 1)) / n, ch = 4.9;
+    o.views3d.forEach((v, i) => {
+      const x = 0.5 + i * (cw + gap);
+      const iw = Math.min(cw, ch * v.aspect), ih = iw / v.aspect;
+      const y = 1.45 + (ch - ih) / 2;
+      s.addShape(pres.ShapeType.rect, { x, y: y - 0.1, w: cw, h: 0.04, fill: { color: ORANGE }, line: { color: ORANGE } });
+      s.addImage({ data: v.png, x: x + (cw - iw) / 2, y, w: iw, h: ih });
+      s.addText(v.title, { x, y: y + ih + 0.05, w: cw, h: 0.35, fontSize: 11, color: GREY, fontFace: FONT });
+    });
+  }
 
   // 3. area overview by stream (or by area type when there are no streams)
   const byStream = p.zones.some(z => z.stream);

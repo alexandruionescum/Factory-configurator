@@ -22,6 +22,7 @@ UI language: English. Steps: Factory size → Zones → Layout → Flows → 3D 
 - `src/lib/template.ts` brief template (writer and reader together), `briefProject.ts` brief → project,
   `briefImport.ts` any-Excel zone import, `xlsxRead.ts` value-only .xlsx reader (exceljs fails on some files).
 - `src/lib/pptx.ts` presentation, `exports.ts` file names, downloads, plan PNG, visTABLE Block Layout Table.
+- `src/lib/scene3d.ts` three.js scene shared by the 3D step and the still 3D views on the presentation slide.
 - `src/lib/vtlx.ts` + `steps/VistableStep.tsx`: material flows into a Pack and Go. **Hidden** from the menu
   for now (owner's decision); kept and tested, re-enable by adding the step back in `App.tsx`.
 

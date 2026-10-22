@@ -3,6 +3,7 @@ import { Store } from '../lib/store';
 import { download, fileName, planPng } from '../lib/exports';
 import { layoutIssues } from '../lib/layout';
 import { buildPptx } from '../lib/pptx';
+import { EXPORT_VIEWS, render3D } from '../lib/scene3d';
 import { BRANDED } from '../lib/brand';
 import PlanView from '../components/PlanView';
 import { NumField } from '../components/fields';
@@ -26,10 +27,13 @@ export default function ExportStep({ store }: { store: Store }) {
     const png = await planPng('export-plan', p, false);
     const svg = document.getElementById('export-plan') as unknown as SVGSVGElement;
     const vb = svg.viewBox.baseVal;
+    // 3D stills need WebGL; without it the presentation is built without the 3D slide
+    let views3d: { title: string; png: string; aspect: number }[] = [];
+    try { views3d = EXPORT_VIEWS.map(v => ({ title: v.title, png: render3D(p, v), aspect: 1.6 })); } catch { views3d = []; }
     const logoPng = BRANDED ? (await import('../assets/efeso-logo.png?inline')).default.split(',')[1] : undefined;
     const blob = await buildPptx(p, {
       footer: BRANDED ? 'EFESO Management Consultants' : 'Factory Layout Configurator',
-      logoPng, planPng: await toDataUrl(png), planAspect: vb.width / vb.height,
+      logoPng, planPng: await toDataUrl(png), planAspect: vb.width / vb.height, views3d,
     });
     await download(blob, fileName(p, 'layout', 'pptx'));
   };
@@ -50,7 +54,7 @@ export default function ExportStep({ store }: { store: Store }) {
       <div className="export-grid">
         <div className="card main-export">
           <h3>Presentation (.pptx)</h3>
-          <p className="muted">PowerPoint in 16:9: title, block layout with key figures and legend, area overview, zone list, material flows, checks and assumptions.</p>
+          <p className="muted">PowerPoint in 16:9: title, block layout with key figures and legend, two 3D views, area overview, zone list, material flows, checks and assumptions.</p>
           <button className="primary" disabled={!placed || busy} onClick={() => run('Presentation', pptx)}>Download PowerPoint</button>
         </div>
         <div className="card">
