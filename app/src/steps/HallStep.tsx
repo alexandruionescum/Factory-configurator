@@ -23,13 +23,13 @@ export default function HallStep({ store, onGenerated }: { store: Store; onGener
   };
 
   return (
-    <div className="step-body narrow">
+    <div className="step-body">
       <h2>Factory size configuration</h2>
       <p className="lead">Size of the factory building. All dimensions are in metres. For L, U and S shapes this is the outer box; the shape itself is chosen in the Layout step.</p>
 
       <BriefStart store={store} onGenerated={onGenerated} />
 
-      <div className="card form">
+      <div className="card form three">
         <label className="field wide">
           <span>Project name</span>
           <input value={p.name} onChange={e => update(q => ({ ...q, name: e.target.value }))} />

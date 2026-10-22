@@ -68,8 +68,8 @@ export default function App() {
           <span className="product">Factory Layout <em className="accent">Configurator</em></span>
         </div>
         <div className="pname">{p.name}</div>
-        <ThemeSwitch />
-        <div className="actions">
+        <div className="actions tools">
+          <ThemeSwitch />
           <button onClick={store.undo} disabled={!store.canUndo} title="Undo (Ctrl+Z)">↶</button>
           <button onClick={store.redo} disabled={!store.canRedo} title="Redo (Ctrl+Y)">↷</button>
           <button onClick={async () => { if (await ask({ text: 'Start an empty project? The current project is lost unless you saved it (Save in the top bar).', ok: 'Start new project' })) { store.reset(); setStep('hall'); } }}>New</button>
