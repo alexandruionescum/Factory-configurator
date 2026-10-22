@@ -5,6 +5,10 @@ import PlanView from '../components/PlanView';
 import Issues from '../components/Issues';
 import { NumInput } from '../components/fields';
 
+const Chevron = ({ left }: { left?: boolean }) => (
+  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d={left ? 'M10 3 5 8l5 5' : 'M6 3l5 5-5 5'} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+
 export default function FlowsStep({ store }: { store: Store }) {
   const { project: p, update } = store;
   const byId = new Map(p.zones.map(z => [z.id, z]));
@@ -48,9 +52,9 @@ export default function FlowsStep({ store }: { store: Store }) {
                 const z = byId.get(id);
                 return (
                   <span key={i} className="chip" style={{ borderColor: z?.color }}>
-                    <button className="tiny" onClick={() => moveStep(pr, i, -1)} title="Move earlier">‹</button>
-                    {z ? (z.code || z.name) : '?'}
-                    <button className="tiny" onClick={() => moveStep(pr, i, 1)} title="Move later">›</button>
+                    <button className="move" disabled={i === 0} onClick={() => moveStep(pr, i, -1)} title="Move earlier" aria-label="Move earlier"><Chevron left /></button>
+                    <span className="code">{z ? (z.code || z.name) : '?'}</span>
+                    <button className="move" disabled={i === pr.route.length - 1} onClick={() => moveStep(pr, i, 1)} title="Move later" aria-label="Move later"><Chevron /></button>
                     <button className="tiny" onClick={() => setPr(pr.id, { route: pr.route.filter((_, k) => k !== i) })} title="Remove step">✕</button>
                   </span>
                 );

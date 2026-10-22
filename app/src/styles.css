@@ -142,7 +142,7 @@ textarea { width: 100%; font-family: ui-monospace, Consolas, monospace; font-siz
 
 .main { min-height: 0; overflow: hidden; }
 .step-body { height: 100%; overflow: auto; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 16px; }
-.step-body > * { flex-shrink: 0; } /* the page scrolls, cards never squeeze their content */
+.step-body > *, .scroll-pane > * { flex-shrink: 0; } /* the page scrolls, cards never squeeze their content */
 .lead { margin: 0; color: var(--muted); font-size: 15px; }
 .muted { color: var(--muted); }
 .small { font-size: 12px; }
@@ -220,7 +220,11 @@ svg.plan { flex: 1; min-height: 0; width: 100%; background: var(--plan-bg); bord
 .product-head { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
 .product-head .pname { flex: 1; font-weight: 500; font-size: 15px; }
 .route { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; align-items: center; }
-.chip { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--line); border-left-width: 4px; padding: 3px 6px; font-weight: 700; font-size: 13px; color: var(--ink); background: var(--panel); }
+.chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-left-width: 4px; padding: 3px 4px 3px 6px; font-weight: 700; font-size: 13px; color: var(--ink); background: var(--panel); }
+.chip .move { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border: 1px solid var(--line); background: var(--bg); font-size: 18px; line-height: 1; font-weight: 700; letter-spacing: 0; }
+.chip .move:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip .move:disabled { opacity: .3; }
+.chip .code { padding: 0 4px; }
 
 .view3d { position: relative; flex: 1; min-height: 300px; border: 1px solid var(--line); border-top: 3px solid var(--accent); overflow: hidden; }
 .view3d canvas { display: block; }
