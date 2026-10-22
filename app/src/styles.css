@@ -142,6 +142,7 @@ textarea { width: 100%; font-family: ui-monospace, Consolas, monospace; font-siz
 
 .main { min-height: 0; overflow: hidden; }
 .step-body { height: 100%; overflow: auto; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 16px; }
+.step-body > * { flex-shrink: 0; } /* the page scrolls, cards never squeeze their content */
 .lead { margin: 0; color: var(--muted); font-size: 15px; }
 .muted { color: var(--muted); }
 .small { font-size: 12px; }
