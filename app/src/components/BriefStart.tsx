@@ -73,8 +73,8 @@ export default function BriefStart({ store, onGenerated }: { store: Store; onGen
           <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e => { const f = e.target.files?.[0]; if (f) load(f); e.target.value = ''; }} />
           <span>Import filled brief</span>
         </label>
-        {file && <span className="muted">{file}</span>}
       </div>
+      {file && <p className="muted small" style={{ margin: '8px 0 0' }}>{file}</p>}
       {msg && <div className={`note${msg.ok ? '' : ' bad'}`} style={{ marginTop: 10 }}>{msg.text}</div>}
 
       {brief && result && p && (
