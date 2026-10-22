@@ -55,7 +55,7 @@ export default function ExportStep({ store }: { store: Store }) {
         <div className="card main-export">
           <h3>Presentation (.pptx)</h3>
           <p className="muted">PowerPoint in 16:9: title, block layout with key figures and legend, two 3D views, area overview, zone list, material flows, checks and assumptions.</p>
-          <button className="primary" disabled={!placed || busy} onClick={() => run('Presentation', pptx)}>Download PowerPoint</button>
+          <button disabled={!placed || busy} onClick={() => run('Presentation', pptx)}>Download PowerPoint</button>
         </div>
         <div className="card">
           <h3>Layout image (.png)</h3>

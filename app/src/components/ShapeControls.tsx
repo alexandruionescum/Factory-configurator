@@ -22,7 +22,7 @@ export default function ShapeControls({ value, aisle, wingUsed, size, onChange, 
         <div className="seg shapes" role="group" aria-label="Building shape">
           {(['I', 'L', 'U', 'S'] as ShapeType[]).map(s => (
             <button key={s} className={v.shape === s ? 'on' : ''} aria-pressed={v.shape === s} title={NAMES[s]} onClick={() => onChange({ shape: s })}>
-              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style={{ transform: `rotate(${-v.rot}deg)` }}><path d={ICON[s]} fill="currentColor" /></svg>
+              <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" style={{ transform: `rotate(${-v.rot}deg)` }}><path d={ICON[s]} fill="currentColor" /></svg>
               <span>{s}</span>
             </button>
           ))}
@@ -32,7 +32,7 @@ export default function ShapeControls({ value, aisle, wingUsed, size, onChange, 
 
       <div className="fit-row">
         <span className="muted small">Factory {size.width} × {size.length} m</span>
-        <button className="small" onClick={onFit} title="Outer size with balanced wings for this shape, just large enough for all zones">Fit factory size to shape</button>
+        <button onClick={onFit} title="Outer size with balanced wings for this shape, just large enough for all zones">Fit factory size to shape</button>
       </div>
 
       {v.shape !== 'I' && (

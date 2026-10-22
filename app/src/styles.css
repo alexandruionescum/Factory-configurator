@@ -229,6 +229,8 @@ svg.plan { flex: 1; min-height: 0; width: 100%; background: var(--plan-bg); bord
 
 .export-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
 .export-grid .card { display: flex; flex-direction: column; gap: 8px; }
+/* download = white, import = orange (same rule across the app) */
+.export-grid .card > button { width: 100%; height: 44px; margin-top: auto; border-color: var(--ink); box-shadow: none; }
 .export-grid .card p { flex: 1; margin: 0; }
 .export-grid .card button { align-self: flex-start; }
 
@@ -301,8 +303,13 @@ ul.plain li + li { margin-top: 3px; }
 /* layout: shape controls and legend */
 .shape-card { display: flex; flex-direction: column; gap: 12px; }
 .shape-card h3 { margin-bottom: 0; }
-.shape-row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
-.seg.shapes button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 12px; font-size: 11px; }
+.shape-row { display: flex; flex-direction: column; gap: 8px; }
+.seg.shapes { display: flex; width: 100%; }
+.seg.shapes button { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px 6px; font-size: 12px; }
+.shape-card .rot, .shape-card .fit-row button { width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; }
+.shape-card .rot { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.shape-card .rot:hover:not(:disabled) { background: var(--ink); opacity: .85; border-color: var(--ink); }
+.shape-card .fit-row { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .seg.shapes svg { transition: transform .2s; }
 button.rot { letter-spacing: .04em; }
 .shape-card small { font-size: 12px; line-height: 1.35; }
