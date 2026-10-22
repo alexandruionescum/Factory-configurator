@@ -62,7 +62,7 @@ ok((await save(() => page.click('text=Download PowerPoint'), 'deck.pptx')).endsW
 ok((await save(() => page.click('text=Download image'), 'plan.png')).endsWith('.png'), 'image exported');
 ok((await save(() => page.click('.top >> text=Save'), 'project.json')).endsWith('.json'), 'project saved');
 
-await page.click('.seg >> text=Dark');
+await page.click('button[aria-label="Dark mode"]');
 ok(await page.evaluate(() => document.documentElement.dataset.theme) === 'dark', 'dark theme');
 await page.setViewportSize({ width: 390, height: 844 });
 await step(3);

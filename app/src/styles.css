@@ -249,6 +249,8 @@ svg.plan { flex: 1; min-height: 0; width: 100%; background: var(--plan-bg); bord
   .form.three { grid-template-columns: 1fr 1fr; }
   .top { padding: 10px 16px; gap: 12px; }
   .steps { padding: 0 8px; }
+  .top .tools { width: 100%; }
+  .top .tools button { width: calc((100% - 18px) / 4); }
   .top .pname { display: none; }
   .brand .logo { width: 92px; }
   .brand .product { font-size: 15px; padding-left: 12px; }
@@ -284,6 +286,10 @@ svg.plan { flex: 1; min-height: 0; width: 100%; background: var(--plan-bg); bord
 
 /* brief import */
 .card.brief { border-top: 3px solid var(--accent); }
+/* the two brief actions as equal boxes */
+.card.brief .row > button, .card.brief .file-btn span { width: 260px; height: 40px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; }
+.card.brief .row > button { border-color: var(--ink); }
+@media (max-width: 600px) { .card.brief .row > button, .card.brief .file-btn, .card.brief .file-btn span { width: 100%; } }
 .file-btn.primary span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
 .file-btn.primary:hover span { background: var(--accent-hover); border-color: var(--accent-hover); }
 ul.plain { margin: 6px 0 0; padding-left: 18px; }
