@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Store } from '../lib/store';
 import { NumField } from '../components/fields';
 import { fmt } from '../lib/flows';
-import { proposeHall } from '../lib/layout';
+import { buildingArea, proposeHall } from '../lib/layout';
 import { withSizeNote } from '../lib/model';
 import BriefStart from '../components/BriefStart';
 
@@ -14,7 +14,7 @@ export default function HallStep({ store, onGenerated }: { store: Store; onGener
   const setHall = (k: 'width' | 'length' | 'height', v: number) =>
     update(q => ({ ...(k === 'height' ? q : withSizeNote(q, null)), hall: { ...q.hall, [k]: v, ...(k === 'height' ? {} : { footprint: undefined, wing: undefined }) } }));
   const total = p.zones.reduce((s, z) => s + z.target, 0);
-  const hallArea = p.hall.width * p.hall.length;
+  const hallArea = buildingArea(p);  // L / U / S: the building, not the outer box
 
   const propose = () => {
     const h = proposeHall(p, grossUp);

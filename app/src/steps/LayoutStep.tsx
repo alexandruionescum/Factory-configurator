@@ -13,7 +13,7 @@ export default function LayoutStep({ store }: { store: Store }) {
   const ask = useAsk();
   const [sel, setSel] = useState<string | null>(null);
   const [showFlows, setShowFlows] = useState(true);
-  const [note, setNote] = useState('');
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [hl, setHl] = useState<string[]>([]);
   const z = p.zones.find(q => q.id === sel) ?? null;
   const issues = layoutIssues(p);
@@ -31,8 +31,8 @@ export default function LayoutStep({ store }: { store: Store }) {
     const s2 = project.layout!;
     const grp = s2.groupBy === 'type' ? 'by area type' : s2.groupBy === 'stream' ? 'by stream' : 'in flow order';
     setNote(result.fits
-      ? `${s2.shape} shape${s2.rot ? ` (${s2.rot}°)` : ''}${s2.shape !== 'I' ? `, wing ${result.wing} m` : ''}: zones ${grp}${s2.separate && s2.groupBy !== 'flow' ? ', groups separated' : ''}${next.aisle ? `, ${next.aisle} m aisles` : ', zones touching'}.`
-      : `The zones do not fit this ${s2.shape} shape in ${next.hall.width} × ${next.hall.length} m. Use Fit factory size to shape${s2.separate ? ', switch off Separate the groups' : ''} or reduce the aisle. Zones outside are marked in the checks.`);
+      ? { ok: true, text: `${s2.shape} shape${s2.rot ? ` (${s2.rot}°)` : ''}${s2.shape !== 'I' ? `, wing ${result.wing} m` : ''}: zones ${grp}${s2.separate && s2.groupBy !== 'flow' ? ', groups separated' : ''}${next.aisle ? `, ${next.aisle} m aisles` : ', zones touching'}.` }
+      : { ok: false, text: `The zones do not fit this ${s2.shape} shape in ${next.hall.width} × ${next.hall.length} m. Use Fit factory size to shape${s2.separate ? ', switch off Separate the groups' : ''} or reduce the aisle. Zones outside are marked in the checks.` });
   };
   const fitSize = () => {
     const size = proposeForShape({ ...p, layout: { ...st, wing: null } });
@@ -73,9 +73,9 @@ export default function LayoutStep({ store }: { store: Store }) {
           <span className="muted small">Drag a zone to move it; the white handles resize it. Arrow keys: 5 cm (Shift: 1 m), R: rotate.</span>
         </div>
         {note && (
-          <div className={`note${note.startsWith('The zones do not fit') ? ' bad' : ''}`}>
-            {note}
-            {note.startsWith('The zones do not fit') && <button className="small inline" onClick={fitSize}>Fit factory size to shape</button>}
+          <div className={`note${note.ok ? '' : ' bad'}`}>
+            {note.text}
+            {!note.ok && <button className="small inline" onClick={fitSize}>Fit factory size to shape</button>}
           </div>
         )}
         <PlanView project={p} selectedId={sel} onSelect={setSel} showFlows={showFlows} highlight={hl}

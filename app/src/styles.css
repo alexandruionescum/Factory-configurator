@@ -144,9 +144,6 @@ textarea { width: 100%; font-family: ui-monospace, Consolas, monospace; font-siz
 .bad { color: var(--bad); }
 .ok { color: var(--ok); margin: 0; }
 .card { background: var(--panel); border: 1px solid var(--line); padding: 18px 20px; }
-.card.hint { border-left: 3px solid var(--accent); }
-.card.hint ul { margin: 6px 0 0; padding-left: 18px; }
-.card.hint b { color: var(--ink); font-weight: 500; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
 .note { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 9px 14px; color: var(--ink); }
 .note.bad { background: color-mix(in srgb, var(--bad) 10%, transparent); border-left-color: var(--bad); }

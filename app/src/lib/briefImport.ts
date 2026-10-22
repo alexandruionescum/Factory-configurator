@@ -7,16 +7,14 @@ export type Cell = string | number | null;
 export interface Sheet { name: string; rows: Cell[][] }
 
 // Cell values only; see xlsxRead.ts for why this does not use exceljs.
-export async function readWorkbook(buf: ArrayBuffer): Promise<Sheet[]> {
-  return readXlsx(buf);
-}
+export const readWorkbook = readXlsx;
 
 export const text = (c: Cell) => (c === null ? '' : String(c).trim());
 
 // "1.234,5" / "1,234.5" / "1 234" / "520 m²" -> number
 export function parseNumber(c: Cell): number | null {
   if (typeof c === 'number') return Number.isFinite(c) ? c : null;
-  let s = text(c).replace(/m²|m2|sqm/gi, '').replace(/[\s ']/g, '');
+  let s = text(c).replace(/m²|m2|sqm/gi, '').replace(/[\s\u00a0']/g, '');
   if (!s) return null;
   const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.');
   if (lc >= 0 && ld >= 0) s = lc > ld ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
@@ -30,7 +28,7 @@ export function parseNumber(c: Cell): number | null {
 export type Field = 'code' | 'name' | 'type' | 'area';
 export type Mapping = Record<Field, number>; // column index, -1 = not used
 
-const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss').trim();
+const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss').trim();
 
 const SYN: Record<Field, string[]> = {
   area: ['area', 'surface', 'suprafata', 'flache', 'flaeche', 'nutzflache', 'sqm', 'm2', 'm²'],

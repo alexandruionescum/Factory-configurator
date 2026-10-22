@@ -72,7 +72,7 @@ export default function App() {
         <div className="actions">
           <button onClick={store.undo} disabled={!store.canUndo} title="Undo (Ctrl+Z)">↶</button>
           <button onClick={store.redo} disabled={!store.canRedo} title="Redo (Ctrl+Y)">↷</button>
-          <button onClick={async () => { if (await ask({ text: 'Start an empty project? The current project is lost unless you saved it (Export → Project).', ok: 'Start new project' })) { store.reset(); setStep('hall'); } }}>New</button>
+          <button onClick={async () => { if (await ask({ text: 'Start an empty project? The current project is lost unless you saved it (Save in the top bar).', ok: 'Start new project' })) { store.reset(); setStep('hall'); } }}>New</button>
           <button onClick={() => file.current?.click()}>Open</button>
           <button title="Save the project as a file (.json) to open it later" onClick={() => download(projectJson(p), fileName(p, 'project', 'json'))}>Save</button>
           <button onClick={async () => { if (await ask({ text: 'Load the example project (fictitious data)? The current project will be replaced.', ok: 'Load example' })) store.loadExample(); }}>Example</button>

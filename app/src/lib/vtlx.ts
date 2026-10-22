@@ -143,12 +143,12 @@ export function writeFlows(p: Project, f: VtlxFile): FlowWriteResult {
       const a = pr.route[i], b = pr.route[i + 1];
       if (a === b) continue;
       const tid = newId();
-      let item: string, lc: string, ttx: string;
+      let item: string, lc: string;
       if (!itemId) { itemId = newId(); item = `<Item z:Id="${itemId}"><Document z:Ref="${docRef}" /><Name>${escapeXml(pr.name)}</Name></Item>`; }
       else item = `<Item z:Ref="${itemId}" />`;
       if (!lcId) { lcId = newId(); lc = `<LoadCarrier z:Id="${lcId}"><Document z:Ref="${docRef}" /><Name>N/A</Name></LoadCarrier>`; }
       else lc = `<LoadCarrier z:Ref="${lcId}" />`;
-      ttx = ttId ? `<TransportType z:Ref="${ttId}" />` : ttInline();
+      const ttx = ttId ? `<TransportType z:Ref="${ttId}" />` : ttInline();
       trXml.push(`<Transport z:Id="${tid}"><Document z:Ref="${docRef}" /><ContainersPerTransport>1</ContainersPerTransport><Inventory>0</Inventory><IsCalculated>true</IsCalculated>${item}<ItemsPerContainer>${pr.perContainer}</ItemsPerContainer>${lc}<QtyPerProduct>1</QtyPerProduct><Quantity>${tripsPerYear(pr)}</Quantity><Sink z:Ref="${ops.get(b)}" /><Source z:Ref="${ops.get(a)}" />${ttx}<productLine z:Ref="${plId}" /><transportQtyDivProductLineQty>0</transportQtyDivProductLineQty></Transport>`);
       transports++;
     }

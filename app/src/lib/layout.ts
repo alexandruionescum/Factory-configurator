@@ -12,8 +12,9 @@ export function flowOrder(p: Project, by: GroupBy = layoutSettings(p).groupBy): 
   const products = [...p.products].sort((a, b) => b.volume - a.volume);
   for (const pr of products) for (const id of pr.route) if (!order.includes(id)) order.push(id);
   for (const z of p.zones) if (!order.includes(z.id)) order.push(z.id);
-  const live = order.filter(id => p.zones.some(z => z.id === id && z.target > 0));
-  const key = (id: string) => groupKey(p.zones.find(z => z.id === id)!, by);
+  const byId = new Map(p.zones.map(z => [z.id, z]));
+  const live = order.filter(id => (byId.get(id)?.target ?? 0) > 0);
+  const key = (id: string) => groupKey(byId.get(id)!, by);
   const groups = [...new Set(live.map(key))];
   return groups.flatMap(g => live.filter(id => key(id) === g));
 }
@@ -158,7 +159,8 @@ function fill(units: Unit[], segs: Seg[], d: number, aisle: number, separate: bo
 export function autoArrange(p: Project): ArrangeResult {
   const st = layoutSettings(p);
   const a = Math.max(0, p.aisle);
-  const order = flowOrder(p, st.groupBy).map(id => p.zones.find(z => z.id === id)!);
+  const zoneById = new Map(p.zones.map(z => [z.id, z]));
+  const order = flowOrder(p, st.groupBy).map(id => zoneById.get(id)!);
   const total = order.reduce((s, z) => s + z.target, 0);
   const { width: W, length: L } = p.hall;
   const swap = st.rot === 90 || st.rot === 270;
@@ -243,22 +245,26 @@ export function proposeForShape(p: Project): { width: number; length: number } {
   return best;
 }
 
+const outline = (p: Project): Rect[] => (p.hall.footprint?.length ? p.hall.footprint : [{ x: 0, y: 0, w: p.hall.width, l: p.hall.length }]);
+export const buildingArea = (p: Project) => outline(p).reduce((s, r) => s + r.w * r.l, 0);
+
 // Area of a zone inside the building outline.
 export function insideArea(p: Project, z: Rect): number {
-  const rects = p.hall.footprint?.length ? p.hall.footprint : [{ x: 0, y: 0, w: p.hall.width, l: p.hall.length }];
-  return rects.reduce((s, r) => {
+  return outline(p).reduce((s, r) => {
     const dx = Math.min(z.x + z.w, r.x + r.w) - Math.max(z.x, r.x);
     const dy = Math.min(z.y + z.l, r.y + r.l) - Math.max(z.y, r.y);
     return s + (dx > 0 && dy > 0 ? dx * dy : 0);
   }, 0);
 }
 
-// Free spot for a single zone: first position on a 1 m scan that overlaps nothing.
+// Free spot for a single zone: first position on a 1 m scan inside the building that overlaps nothing.
 export function findFreeSpot(p: Project, z: Zone): { x: number; y: number } {
   const others = p.zones.filter(o => o.placed && o.id !== z.id);
   for (let y = 0; y + z.l <= p.hall.length; y += 1)
-    for (let x = 0; x + z.w <= p.hall.width; x += 1)
-      if (!others.some(o => overlap({ ...z, x, y }, o) > 0)) return { x, y };
+    for (let x = 0; x + z.w <= p.hall.width; x += 1) {
+      const at = { ...z, x, y };
+      if (insideArea(p, at) >= zoneArea(at) - 0.01 && !others.some(o => overlap(at, o) > 0)) return { x, y };
+    }
   return { x: 0, y: 0 };
 }
 
@@ -274,7 +280,7 @@ export function layoutIssues(p: Project): Issue[] {
   const out: Issue[] = [];
   const placed = p.zones.filter(z => z.placed);
   for (const z of p.zones.filter(q => !q.placed))
-    out.push({ level: 'info', text: `${zoneLabel(z)} is not placed in the hall.`, zoneIds: [z.id] });
+    out.push({ level: 'info', text: `${zoneLabel(z)} is not placed in the factory.`, zoneIds: [z.id] });
   for (let i = 0; i < placed.length; i++)
     for (let j = i + 1; j < placed.length; j++) {
       const o = overlap(placed[i], placed[j]);
@@ -282,7 +288,7 @@ export function layoutIssues(p: Project): Issue[] {
     }
   for (const z of placed) {
     if (insideArea(p, z) < zoneArea(z) - 0.05)
-      out.push({ level: 'error', text: `${zoneLabel(z)} extends outside the hall.`, zoneIds: [z.id] });
+      out.push({ level: 'error', text: `${zoneLabel(z)} extends outside the factory.`, zoneIds: [z.id] });
     const dev = z.target > 0 ? (zoneArea(z) - z.target) / z.target : 0;
     if (Math.abs(dev) > 0.05)
       out.push({ level: 'warn', text: `${zoneLabel(z)}: ${zoneArea(z).toFixed(0)} m² vs. ${z.target} m² in the brief (${dev > 0 ? '+' : ''}${Math.round(dev * 100)} %).`, zoneIds: [z.id] });
@@ -297,7 +303,7 @@ export function layoutIssues(p: Project): Issue[] {
     if (gap > p.aisle + 0.5) out.push({ level: 'warn', text: `${zoneLabel(z)} should be next to ${zoneLabel(o)} (now ${gap.toFixed(1)} m apart).`, zoneIds: [z.id, o.id] });
   }
   const total = p.zones.reduce((s, z) => s + z.target, 0);
-  const hall = p.hall.width * p.hall.length;
-  if (total > hall) out.push({ level: 'error', text: `Required area (${total.toFixed(0)} m²) exceeds the hall (${hall.toFixed(0)} m²).`, zoneIds: [] });
+  const building = buildingArea(p);
+  if (total > building) out.push({ level: 'error', text: `Required area (${total.toFixed(0)} m²) exceeds the factory (${building.toFixed(0)} m²).`, zoneIds: [] });
   return out;
 }

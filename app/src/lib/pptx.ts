@@ -4,7 +4,7 @@ import type PptxT from 'pptxgenjs';
 import { AREA_TYPES, Project, areaType, zoneArea } from './model';
 
 type Slide = ReturnType<PptxT['addSlide']>;
-import { layoutIssues, layoutSettings } from './layout';
+import { buildingArea, layoutIssues, layoutSettings } from './layout';
 import { flowChecks, fmt, pairFlows, segments } from './flows';
 
 const ORANGE = 'EE6B00', INK = '000000', GREY = '6A6E79', LINE = 'D4D7DD', LIGHT = 'FDF2E8';
@@ -51,8 +51,7 @@ export async function buildPptx(p: Project, o: PptxOptions): Promise<Blob> {
   const st = layoutSettings(p);
   const placed = p.zones.filter(z => z.placed);
   const net = p.zones.reduce((s, z) => s + z.target, 0);
-  const fp = p.hall.footprint?.length ? p.hall.footprint : [{ x: 0, y: 0, w: p.hall.width, l: p.hall.length }];
-  const fpArea = fp.reduce((s, r) => s + r.w * r.l, 0);
+  const fpArea = buildingArea(p);
 
   // 1. title
   const t = pres.addSlide();

@@ -1,0 +1,7 @@
+{
+  "name": "factory-configurator-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": { "smoke": "node smoke.mjs" },
+  "dependencies": { "playwright": "1.55.0" }
+}

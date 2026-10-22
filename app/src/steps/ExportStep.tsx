@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Store } from '../lib/store';
-import { blockRows, download, fileName, planPng } from '../lib/exports';
+import { download, fileName, planPng } from '../lib/exports';
 import { layoutIssues } from '../lib/layout';
 import { buildPptx } from '../lib/pptx';
 import { BRANDED } from '../lib/brand';
@@ -13,7 +13,7 @@ export default function ExportStep({ store }: { store: Store }) {
   const { project: p, update } = store;
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
-  const rows = blockRows(p);
+  const placed = p.zones.some(z => z.placed);
   const errors = layoutIssues(p).filter(i => i.level === 'error');
 
   const run = async (what: string, fn: () => Promise<void>) => {
@@ -51,12 +51,12 @@ export default function ExportStep({ store }: { store: Store }) {
         <div className="card main-export">
           <h3>Presentation (.pptx)</h3>
           <p className="muted">PowerPoint in 16:9: title, block layout with key figures and legend, area overview, zone list, material flows, checks and assumptions.</p>
-          <button className="primary" disabled={!rows.length || busy} onClick={() => run('Presentation', pptx)}>Download PowerPoint</button>
+          <button className="primary" disabled={!placed || busy} onClick={() => run('Presentation', pptx)}>Download PowerPoint</button>
         </div>
         <div className="card">
           <h3>Layout image (.png)</h3>
           <p className="muted">The plan with zones, flows and dimensions, for e-mails and documents.</p>
-          <button disabled={!rows.length || busy} onClick={() => run('Image', async () => download(await planPng('export-plan', p), fileName(p, 'layout', 'png')))}>Download image</button>
+          <button disabled={!placed || busy} onClick={() => run('Image', async () => download(await planPng('export-plan', p), fileName(p, 'layout', 'png')))}>Download image</button>
         </div>
       </div>
       {msg && <p className="muted">{msg}</p>}

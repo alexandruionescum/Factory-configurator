@@ -23,17 +23,31 @@ export function useProject() {
   const future = useRef<Project[]>([]);
   const [, bump] = useState(0);
 
-  useEffect(() => { save(project); }, [project]);
+  // autosave once the edits pause (dragging changes the project on every pointer move)
+  useEffect(() => {
+    const t = setTimeout(() => save(project), 300);
+    return () => clearTimeout(t);
+  }, [project]);
+  // closing the tab right after an edit still saves it
+  useEffect(() => {
+    const flush = () => save(ref.current);
+    window.addEventListener('pagehide', flush);
+    return () => window.removeEventListener('pagehide', flush);
+  }, []);
 
+  const last = useRef(0);
   const checkpoint = useCallback(() => {
     past.current.push(ref.current);
     if (past.current.length > 100) past.current.shift();
     future.current = [];
+    last.current = Date.now();
     bump(x => x + 1);
   }, []);
 
+  // edits in quick succession (typing a number) share one undo point
   const update = useCallback((fn: (p: Project) => Project, record = true) => {
-    if (record) checkpoint();
+    if (record && Date.now() - last.current > 700) checkpoint();
+    else if (record) last.current = Date.now();
     setProject(p => fn(p));
   }, [checkpoint]);
 

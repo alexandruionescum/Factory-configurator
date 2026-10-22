@@ -73,7 +73,7 @@ export interface Project {
   name: string;
   rev: number;           // output version number used in file names (vNN)
   hall: Hall;
-  aisle: number;         // aisle width between block rows, m
+  aisle: number;         // aisle between lanes of zones, m (0 = zones touch)
   zones: Zone[];
   products: Product[];
   meta?: ProjectMeta;

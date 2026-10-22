@@ -1,6 +1,4 @@
-import { Project, areaType, zoneArea, zoneCenter, zoneLabel } from './model';
-import { flowChecks, fmt, pairFlows, segments, tripsPerYear } from './flows';
-import { layoutIssues } from './layout';
+import { Project, zoneCenter, zoneLabel } from './model';
 
 // File name convention: "YYMMDD Project_vNN_topic.ext"
 export function fileName(p: Project, topic: string, ext: string) {
@@ -100,38 +98,4 @@ export async function planPng(svgId: string, p: Project, withTitle = true): Prom
     cv.getContext('2d')!.drawImage(img, 0, 0);
     return await new Promise<Blob>((res, rej) => cv.toBlob(b => (b ? res(b) : rej(new Error('PNG'))), 'image/png'));
   } finally { URL.revokeObjectURL(url); }
-}
-
-// Delivery report: zones vs brief, flows, open issues, assumptions.
-export function reportMd(p: Project): string {
-  const L: string[] = [];
-  const total = p.zones.reduce((s, z) => s + z.target, 0);
-  L.push(`# ${p.name} – v${String(p.rev).padStart(2, '0')}`, '');
-  const m = p.meta ?? {};
-  const info = [m.client && `Client: ${m.client}`, m.site && `Site: ${m.site}`, m.preparedBy && `Prepared by: ${m.preparedBy}`, m.date && `Brief date: ${m.date}`, m.phase && `Phase: ${m.phase}`].filter(Boolean);
-  if (info.length) L.push(info.join(' · '), '');
-  L.push(`Hall ${p.hall.width} × ${p.hall.length} m (${fmt(p.hall.width * p.hall.length)} m²), clear height ${fmt(p.hall.height, 1)} m, aisle ${fmt(p.aisle, 1)} m.`, '');
-  L.push('## Zones', '', '| Zone | Stream | Type | Positions | Brief (m²) | Plan (m²) | Deviation | Centre position (m) | Size (m) |', '|---|---|---|---:|---:|---:|---:|---|---|');
-  for (const z of p.zones) {
-    const a = zoneArea(z), c = zoneCenter(z);
-    L.push(`| ${zoneLabel(z)} | ${z.stream ?? ''} | ${areaType(z.type).label} | ${z.positions ?? ''} | ${fmt(z.target)} | ${z.placed ? fmt(a, 1) : '–'} | ${z.placed && z.target ? `${fmt(100 * (a - z.target) / z.target, 1)} %` : '–'} | ${z.placed ? `${fmt(c.x, 2)} / ${fmt(c.y, 2)}` : 'not placed'} | ${fmt(z.w, 2)} × ${fmt(z.l, 2)} |`);
-  }
-  L.push('', `Brief total: ${fmt(total)} m².`, '');
-  if (p.products.length) {
-    L.push('## Flows', '', '| Family | Volume / year | Pieces / transport | Transports / year | Route |', '|---|---:|---:|---:|---|');
-    const byId = new Map(p.zones.map(z => [z.id, z]));
-    for (const pr of p.products) L.push(`| ${pr.name} | ${fmt(pr.volume)} | ${fmt(pr.perContainer)} | ${fmt(tripsPerYear(pr))} | ${pr.route.map(id => byId.get(id)?.code || byId.get(id)?.name || '?').join(' → ')} |`);
-    L.push('', '| From | To | Transports / year | Distance (m) | Transport·m / year |', '|---|---|---:|---:|---:|');
-    for (const f of pairFlows(p)) L.push(`| ${zoneLabel(f.from)} | ${zoneLabel(f.to)} | ${fmt(f.trips)} | ${fmt(f.dist, 1)} | ${fmt(f.work)} |`);
-    L.push('', `Total distance × intensity: ${fmt(segments(p).reduce((s, x) => s + x.work, 0))} transport·m / year.`, '');
-  }
-  const issues = [...layoutIssues(p), ...flowChecks(p)];
-  L.push('## Checks', '');
-  L.push(...(issues.length ? issues.map(i => `- ${i.text}`) : ['- No issues found.']), '');
-  L.push('## Assumptions', '',
-    '- Distances are rectilinear between zone centres, not along the aisles.',
-    `- Blocks are exported as floor blocks ${BLOCK_HEIGHT_MM} mm high, on the layer "Block layout".`,
-    '- Flow entry / exit points are at the middle of the west / east side of each block.',
-    ...(m.assumptions ?? []).map(a => `- ${a}`), '');
-  return L.join('\n');
 }

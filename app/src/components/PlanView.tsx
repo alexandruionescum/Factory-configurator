@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useId, useRef } from 'react';
 import { Project, Zone, snap, zoneArea, zoneCenter } from '../lib/model';
 import { pairFlows } from '../lib/flows';
 
@@ -22,6 +22,7 @@ const M = 4; // margin around the hall, m
 
 export default function PlanView({ project, selectedId, onSelect, onZoneChange, onDragStart, showFlows, highlight = [], svgId }: Props) {
   const svg = useRef<SVGSVGElement>(null);
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');  // pattern / marker ids unique per plan
   const drag = useRef<{ id: string; h: Handle; x0: number; y0: number; z: Zone } | null>(null);
   const { width: W, length: L } = project.hall;
   const sy = (y: number) => L - y;
@@ -78,19 +79,19 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        <pattern id="g1" width="1" height="1" patternUnits="userSpaceOnUse">
+        <pattern id={`g1${uid}`} width="1" height="1" patternUnits="userSpaceOnUse">
           <path d="M1 0H0V1" fill="none" stroke="#E6E8ED" strokeWidth="0.03" />
         </pattern>
-        <pattern id="g5" width="5" height="5" patternUnits="userSpaceOnUse" y={L % 5}>
-          <rect width="5" height="5" fill="url(#g1)" />
+        <pattern id={`g5${uid}`} width="5" height="5" patternUnits="userSpaceOnUse" y={L % 5}>
+          <rect width="5" height="5" fill={`url(#g1${uid})`} />
           <path d="M5 0H0V5" fill="none" stroke="#D4D7DD" strokeWidth="0.06" />
         </pattern>
         {project.products.map(pr => (
-          <marker key={pr.id} id={`arr-${pr.id}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="2.6" markerHeight="2.6" orient="auto-start-reverse">
+          <marker key={pr.id} id={`arr-${pr.id}${uid}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="2.6" markerHeight="2.6" orient="auto-start-reverse">
             <path d="M0 0L10 5L0 10z" fill={pr.color} />
           </marker>
         ))}
-        <marker id="arr-mix" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="2.6" markerHeight="2.6" orient="auto-start-reverse">
+        <marker id={`arr-mix${uid}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="2.6" markerHeight="2.6" orient="auto-start-reverse">
           <path d="M0 0L10 5L0 10z" fill="#3B3D43" />
         </marker>
       </defs>
@@ -99,7 +100,7 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
       {/* building outline: a thick dark stroke under every part, then the parts filled on top, so only the
           outer edge of the union stays visible (L / U / S shapes are several rectangles) */}
       {parts.map((r, i) => <rect key={`o${i}`} x={r.x} y={sy(r.y + r.l)} width={r.w} height={r.l} fill="none" stroke="#3B3D43" strokeWidth={ext / 150} />)}
-      {parts.map((r, i) => <rect key={`f${i}`} x={r.x} y={sy(r.y + r.l)} width={r.w} height={r.l} fill="url(#g5)" />)}
+      {parts.map((r, i) => <rect key={`f${i}`} x={r.x} y={sy(r.y + r.l)} width={r.w} height={r.l} fill={`url(#g5${uid})`} />)}
       {parts.length > 1 && <rect x={0} y={0} width={W} height={L} fill="none" stroke="#A9ACB4" strokeWidth={ext / 600} strokeDasharray={`${ext / 120} ${ext / 120}`} />}
       <text x={W / 2} y={-1.2} fontSize={ext / 50} textAnchor="middle" fill="#6A6E79">{W} m</text>
       <text x={-1.2} y={L / 2} fontSize={ext / 50} textAnchor="middle" fill="#6A6E79" transform={`rotate(-90 ${-1.2} ${L / 2})`}>{L} m</text>
@@ -125,7 +126,7 @@ export default function PlanView({ project, selectedId, onSelect, onZoneChange, 
         return (
           <line key={`${f.from.id}>${f.to.id}`} x1={a.x + ux * cut} y1={sy(a.y + uy * cut)} x2={b.x - ux * cut} y2={sy(b.y - uy * cut)}
             stroke={one ? one.color : '#3B3D43'} strokeOpacity={0.75} strokeWidth={sw} strokeLinecap="round"
-            markerEnd={`url(#arr-${one ? one.id : 'mix'})`} pointerEvents="none" />
+            markerEnd={`url(#arr-${one ? one.id : 'mix'}${uid})`} pointerEvents="none" />
         );
       })}
 

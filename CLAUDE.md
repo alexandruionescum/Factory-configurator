@@ -4,13 +4,39 @@ Goal: a factory layout configurator (block layout, material flow, transport netw
 visTABLE workflow in `.claude/skills/vistable-factory-layout/SKILL.md`. Later it should be usable by other people.
 Concept, steps and open decisions: `docs/concept.md`. Keep that file up to date when a decision is made.
 
+## Working with the owner
 - The owner writes in Romanian; answer in Romanian. They are a factory planner, not a programmer: explain git /
   tooling steps plainly and do them yourself.
-- The web app lives in `app/` (Vite + React + TypeScript, three.js, exceljs). UI language: English.
-- Design: EFESO identity (from efeso.com): colour tokens and fonts at the top of `app/src/styles.css`, logo in
-  `app/src/assets/efeso-logo.svg`, fonts bundled in `app/src/assets/fonts/` (Roboto, Roboto Serif, OFL).
-  Do not publish EFESO-branded builds as public claude.ai artifacts; hand the built file to the owner instead.
-  `cd app && npm install && npm run build` -> one self-contained `app/dist/index.html`. `npm run dev` for development.
-- Setup in a fresh session: `source tools/setup_libredwg.sh` (builds libredwg into `.local/`, sets DWGREAD / DWGWRITE).
-- Client data (.vtlx, .dwg, .xlsx briefs) never goes into the repo; only anonymised files in `tests/fixtures/`.
+- **Pushing to `main` publishes the public site** (GitHub Pages workflow). Work and commit locally; push only when
+  the owner says to update the site ("actualizează site-ul"). Show changes with screenshots or the built HTML file.
+- Client data (.vtlx, .dwg, .xlsx briefs) never goes into the repo; tests use synthetic data only.
 - Real visTABLE tests (opening a .vtlx, mesh audit with the assets folder) only happen on the owner's Windows PC.
+
+## The web app (`app/`)
+Vite + React + TypeScript, three.js (3D), exceljs (writes .xlsx), pptxgenjs (PowerPoint), fflate (zip).
+UI language: English. Steps: Factory size → Zones → Layout → Flows → 3D → Export.
+
+- `src/lib/model.ts` data model (metres, plan origin SW corner, X east, Y north; visTABLE area type keys).
+- `src/lib/layout.ts` arrangement engine: building shapes I / L / U / S as segments, zones in lanes along
+  them, grouping, aisles, size proposals, checks. Covered by `src/tests/layout.test.ts`.
+- `src/lib/template.ts` brief template (writer and reader together), `briefProject.ts` brief → project,
+  `briefImport.ts` any-Excel zone import, `xlsxRead.ts` value-only .xlsx reader (exceljs fails on some files).
+- `src/lib/pptx.ts` presentation, `exports.ts` file names, downloads, plan PNG, visTABLE Block Layout Table.
+- `src/lib/vtlx.ts` + `steps/VistableStep.tsx`: material flows into a Pack and Go. **Hidden** from the menu
+  for now (owner's decision); kept and tested, re-enable by adding the step back in `App.tsx`.
+
+Commands (in `app/`): `npm run dev`, `npm run check` (types + lint + unit tests, also run by the publish
+workflow), `npm run build` (one self-contained `dist/index.html`, EFESO-branded),
+`npm run build:preview` (logo-free `dist-neutral/preview.html` for the claude.ai preview artifact).
+Browser smoke test: `cd tests/e2e && npm install && CHROMIUM=/opt/pw-browsers/chromium npm run smoke`.
+
+## Design
+EFESO identity (from efeso.com): colour tokens and fonts at the top of `app/src/styles.css`, logo in
+`app/src/assets/`, fonts bundled in `app/src/assets/fonts/` (Roboto, Roboto Serif, OFL).
+Do not publish EFESO-branded builds as claude.ai artifacts: the preview artifact uses `build:preview`;
+the branded build goes to the owner as a file or to the GitHub Pages site.
+
+## Other
+- Setup for the visTABLE toolkit scripts: `source tools/setup_libredwg.sh` (libredwg into `.local/`).
+- Known audit findings without impact here: image-size (used by pptxgenjs only under Node), uuid in exceljs
+  (only v3/v5/v6 with a buffer argument, not used).
